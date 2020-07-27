@@ -1,24 +1,44 @@
 <template>
   <div>
-    <canvas ref="canvas" id="canvas" style="touch-action:none;"></canvas>
-    <canvas class="h5-canvas" style="display:block;"></canvas>
+    <div class="canvas-container">
+      <canvas ref="canvas" id="canvas"></canvas>
+      <h5-canvas
+        :width="config.width"
+        :height="config.height"
+        :color="color"
+        :mode="mode"
+        ref="h5canvas"
+        :item="currItem"
+        class="h5canvas"
+      ></h5-canvas>
+    </div>
+    <button @click="changeMode('pencil')">画笔模式</button>
+    <button @click="changeMode('eraser')">橡皮擦模式</button>
+    <button @click="saveState">保存状态</button>
+    <button @click="reStoreState">清除状态</button>
+    <button @click="pre">返回上一步</button>
+    <button @click="switchToNext(1)">切换图片</button>
+    <button @click="exportTest">导出</button>
+    <button @click="composeImageTest">生成合成图片</button>
+    <img :src="baseUrl" />
+    <img :src="composeUrl" />
   </div>
 </template>
 
 <script>
 import { fabric } from "fabric";
-// v-on:touchstart="
-//   (e) => {
-//     e.preventDefault();
-//   }
-// "
-// v-on:touchmove="
-//   (e) => {
-//     e.preventDefault();
-//   }
-// "
-// v-on:pointermove="move"
+import h5Canvas from "./module/h5canvas";
+import Item from "./Item.js";
+import { isImageVaild, composeCanvas } from "../utils.js";
+
+const defaultConfig = {
+  width: 800,
+  height: 500
+};
 export default {
+  components: {
+    h5Canvas
+  },
   data() {
     return {
       canvas: null,
@@ -29,28 +49,182 @@ export default {
       canDraw: false,
       priviousPressure: 0,
       baseLineList: [6, 10, 15, 25],
-      pathStr: ""
+      pathStr: "",
+      color: "red",
+      mode: "pencil",
+      config: Object.assign({}, defaultConfig),
+      imagesList: [
+        "https://img.vipkidstatic.com/beeschool/server/20200717/ccb8432c-acf2-4f63-b51d-4195a3fde520.png",
+        "https://img.vipkidstatic.com/beeschool/server/20200717/b279967c-4d95-4603-899c-74db4092d5b8.png"
+      ],
+      currIndex: 0,
+      itemList: [],
+      currItem: null,
+      isFirstRender: true,
+      loadedStatus: [],
+      baseUrl: null,
+      composeUrl: null
     };
   },
   mounted() {
-    // this.$nextTick(() => {
-    // this.canvas = new fabric.Canvas("canvas", {});
-    // });
     this.initCanvas();
+    this.switchToNext();
   },
   methods: {
+    composeImageTest() {
+      // console.log("this.canvas.toDataURL()", this.canvas.toDataURL());
+      let url = composeCanvas(
+        this.config.width,
+        this.config.height,
+        document.querySelector(".h5canvas"),
+        // this.canvas.toDataURL()
+        document.querySelector("#canvas")
+        // document.querySelector(".lower-canvas")
+      );
+      this.composeUrl = url;
+      console.log("url", url);
+    },
+    exportTest() {
+      this.baseUrl = this.currItem.h5exprot();
+    },
+    saveState() {
+      // this.$refs.h5canvas.save();
+      this.currItem.h5save();
+    },
+    reStoreState() {
+      this.currItem.geth5State("undo");
+    },
+    pre() {},
+    changeMode(mode) {
+      this.mode = mode;
+    },
+
+    initCanvas() {
+      let canvas = new fabric.Canvas("canvas", {
+        isDrawingMode: false,
+        width: 800,
+        height: 500
+      });
+      this.canvas = canvas;
+
+      var rect = new fabric.Rect({
+        top: 50, //距离画布上边的距离
+        left: 100, //距离画布左侧的距离，单位是像素
+        width: 100, //矩形的宽度
+        height: 70, //矩形的高度
+        fill: "blue", //填充的颜色
+        stroke: "orange", // 边框原色
+        strokeWidth: 5, // 边框大小
+        rx: 8, //圆角半径
+        ry: 4 //圆角半径
+      });
+
+      this.canvas.add(rect);
+      this.loadedStatus = new Array(this.imagesList.lenthg).fill(false);
+    },
+    switchToNext(index) {
+      this.switchImage(index);
+    },
+    async switchImage(index) {
+      // 每加载一张图片才会生成一个实例
+      this.currIndex = index || 0;
+
+      if (!this.loadedStatus[this.currIndex]) {
+        // 首次加载
+        let item = new Item({
+          url: this.imagesList[this.currIndex],
+          canvas: this.canvas,
+          h5canvas: this.$refs.h5canvas
+        });
+        item.checkImageUrl().then((res) => {
+          // if (res.status ===)
+          if (res.status === "ok") {
+            let center = this.canvas.getCenter();
+            this.canvas.setBackgroundImage(
+              this.imagesList[this.currIndex],
+              this.canvas.renderAll.bind(this.canvas),
+              {
+                scaleX: 1,
+                scaleY: 1,
+                top: center.top,
+                left: center.left,
+                originX: "center",
+                originY: "center",
+                crossOrigin: "anonymous"
+              }
+            );
+            // 图片合法
+            this.itemList.push(item);
+            this.currItem = item;
+            this.loadedStatus[this.currIndex] = true;
+            // fabric
+            // this.currItem.historyList.push(JSON.stringify(this.canvas));
+            // 自动保存一条记录
+            this.currItem.save();
+            this.currItem.h5save();
+          }
+        });
+      } else {
+        // 非首次加载
+      }
+    },
+    async switchImage1(index) {
+      // 每加载一张图片才会生成一个实例
+      this.currIndex = index || 0;
+      if (this.isFirstRender) {
+        // 首次渲染
+        let promiseList = [];
+        this.imagesList.forEach((url) => {
+          promiseList.push(isImageVaild(url));
+        });
+        const result = await Promise.allSettled(promiseList);
+        result.forEach((p) => {
+          // if (p.status === "fulfilled") {
+          //   this.itemList.push(new Item({ p: res.url, canvas: this.canvas }));
+          // }
+          if (p.status === "rejected" || p.status === "fulfilled") {
+            this.itemList.push(
+              new Item({ url: p.value.url, canvas: this.canvas })
+            );
+          }
+        });
+        this.isFirstRender = false;
+      }
+      this.currItem = this.itemList[this.currIndex];
+      this.currItem.historyList.push(JSON.stringify(this.canvas));
+      let center = this.canvas.getCenter();
+      this.canvas.setBackgroundImage(
+        this.itemList[this.currIndex].url,
+        this.canvas.renderAll.bind(this.canvas),
+        {
+          // width: (this.canvas.width / 3) * 2,
+          // height: this.canvas.height,
+          // height: 800,
+          // origin: "center"
+          scaleX: 1,
+          scaleY: 1,
+          // top: 0,
+          top: center.top,
+          left: center.left,
+          // left: 0,
+          originX: "center",
+          originY: "center"
+          // originX: "center",
+          // originY: "top"
+        }
+      );
+      this.$refs.h5canvas.save();
+    },
     pathToCurve(path, controlPointsNum = 2) {
+      // M 开始 L 结束
       let support = ["M", "L"];
       let curve = { 2: "Q", 3: "C" };
       let str = "";
       for (let i = 0; i < path.length; i++) {
         let { command, x, y } = path[i];
-        // let [left, top] = value;
-
         if (!support.includes(command)) {
           throw new Error(`${command} is not support width start`);
         }
-
         if (i % controlPointsNum === 0) {
           // 剩余点数不够组成曲线时使用L
           let cmd =
@@ -60,146 +234,27 @@ export default {
           str += ` ${x} ${y}`;
         }
       }
-
       return str;
-    },
-    initCanvas() {
-      this.canvas = new fabric.Canvas("canvas", {
-        isDrawingMode: true,
-        width: 800,
-        height: 500
-      });
-
-      // 可以
-      let upper_canvas = document.querySelector(".h5-canvas");
-      // let upper_canvas = document.querySelector(".upper-canvas");
-
-      upper_canvas.width = 800;
-      upper_canvas.height = 500;
-      // upper_canvas.width = document.documentElement.clientWidth;
-      // upper_canvas.height = document.documentElement.clientHeight;
-      // let upper_canvas = document.querySelector("#canvas");
-      this.ctx = upper_canvas.getContext("2d");
-      this.ctx.globalCompositeOperation = "source-over";
-      this.ctx.lineCap = "round"; //设置线条的结束端点样式
-      this.ctx.lineJion = "round"; //设置两条线相交时，所创建的拐角类型
-      // this.ctx.lineWidth = 10; // 线条宽度
-      this.ctx.strokeStyle = "#02A556"; // 线条颜色
-
-      upper_canvas.addEventListener("pointerdown", this.handledown, false);
-      upper_canvas.addEventListener("pointermove", this.handleMove, false);
-      upper_canvas.addEventListener("pointerup", this.handleUp, false);
-    },
-    handleUp(e) {
-      if (!this.canDraw) return;
-      const { x, y, pressure } = this.getPos(e);
-      this.priviousPressure = pressure;
-      this.points.push({ x, y, command: "L" });
-      if (this.points.length > 3) {
-        const lastTwoPoints = this.points.slice(-2);
-        const controlPoint = lastTwoPoints[0];
-        const endPoint = {
-          x: (lastTwoPoints[0].x + lastTwoPoints[1].x) / 2,
-          y: (lastTwoPoints[0].y + lastTwoPoints[1].y) / 2
-        };
-        this.drawPath(
-          this.beginPoint,
-          controlPoint,
-          endPoint,
-          ((this.priviousPressure + pressure) / 2) * this.baseLineList[0]
-        );
-        this.beginPoint = endPoint;
-      } else {
-        this.priviousPressure = pressure;
-      }
-      this.beginPoint = null;
-      this.canDraw = false;
-      this.points = [];
-    },
-    handledown(e) {
-      this.canDraw = true;
-      const { x, y, pressure } = this.getPos(e);
-      this.priviousPressure = pressure;
-      this.points.push({ x, y, command: "M" });
-      this.beginPoint = { x, y };
-      // console.log(" this.beginPoint", this.beginPoint);
-    },
-    handleMove(e) {
-      if (!this.canDraw) return;
-      // console.log("move", e);
-      // console.log("e", e);
-      const { x, y, pressure } = this.getPos(e);
-      this.priviousPressure = pressure;
-      this.points.push({ x, y, command: "L" });
-      if (this.points.length > 3) {
-        const lastTwoPoints = this.points.slice(-2);
-        const controlPoint = lastTwoPoints[0];
-        const endPoint = {
-          x: (lastTwoPoints[0].x + lastTwoPoints[1].x) / 2,
-          y: (lastTwoPoints[0].y + lastTwoPoints[1].y) / 2
-        };
-        this.drawPath(
-          this.beginPoint,
-          controlPoint,
-          endPoint,
-          pressure * this.baseLineList[0]
-        );
-        this.beginPoint = endPoint;
-      }
-    },
-
-    getPos(e) {
-      const { pressure } = e;
-      console.log("e", e);
-      return {
-        x: e.layerX,
-        y: e.layerY,
-        pressure
-      };
-    },
-    drawPath(beginPoint, controlPoint, endPoint, width) {
-      // console.log("ddd", this.pathToCurve(this.points));
-      let p = this.pathToCurve(this.points);
-      var path = new fabric.Path(p, {
-        fill: null,
-        stroke: "red",
-        strokeWidth: width,
-        strokeLineCap: "round",
-        strokeLineJoin: "round",
-        evented: false,
-        hasControls: false,
-        hasBorders: false,
-        selectable: false,
-        isDrawingMode: false
-        // strokeStyle
-      });
-      this.canvas.add(path);
-      // console.log("beginPoint", beginPoint);
-      this.ctx.beginPath();
-      this.ctx.moveTo(beginPoint.x, beginPoint.y);
-      this.ctx.quadraticCurveTo(
-        controlPoint.x,
-        controlPoint.y,
-        endPoint.x,
-        endPoint.y
-      );
-      this.ctx.lineWidth = width;
-      this.ctx.stroke();
-      this.ctx.closePath();
     }
   }
 };
 </script>
 
-<style>
-div {
+<style lang="less" scoped>
+.canvas-container {
   display: flex;
   justify-content: center;
-}
-canvas {
-  border: 1px solid red;
-}
-.h5-canvas {
-  border: 2px solid green;
+  align-items: center;
+  border: 5px solid red;
+  position: relative;
+  overflow-y: scroll;
+  #canvas {
+    box-sizing: border-box;
+  }
+  // .h5-canvas {
+  //   border: 1px solid green;
+  //   position: absolute;
+  //   z-index: 999;
+  // }
 }
 </style>
