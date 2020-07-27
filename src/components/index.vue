@@ -1,25 +1,25 @@
 <template>
   <div>
     <div class="canvas-container">
-      <canvas ref="canvas" id="canvas"></canvas>
-      <h5-canvas
-        :width="config.width"
-        :height="config.height"
-        :color="color"
-        :mode="mode"
-        ref="h5canvas"
-        :item="currItem"
-        class="h5canvas"
-      ></h5-canvas>
+      <canvas ref="canvas"
+              id="canvas"></canvas>
+      <h5-canvas :width="config.width"
+                 :height="config.height"
+                 :color="color"
+                 :mode="mode"
+                 ref="h5canvas"
+                 :item="currItem"
+                 class="h5canvas"></h5-canvas>
     </div>
     <button @click="changeMode('pencil')">画笔模式</button>
     <button @click="changeMode('eraser')">橡皮擦模式</button>
     <button @click="saveState">保存状态</button>
     <button @click="reStoreState">清除状态</button>
-    <button @click="pre">返回上一步</button>
+    <button @click="undo">上一步</button>
     <button @click="switchToNext(1)">切换图片</button>
     <button @click="exportTest">导出</button>
     <button @click="composeImageTest">生成合成图片</button>
+    <button @click="addRect">添加fabric对象</button>
     <img :src="baseUrl" />
     <img :src="composeUrl" />
   </div>
@@ -39,7 +39,7 @@ export default {
   components: {
     h5Canvas
   },
-  data() {
+  data () {
     return {
       canvas: null,
       points: [],
@@ -66,47 +66,20 @@ export default {
       composeUrl: null
     };
   },
-  mounted() {
+  mounted () {
     this.initCanvas();
     this.switchToNext();
   },
   methods: {
-    composeImageTest() {
-      // console.log("this.canvas.toDataURL()", this.canvas.toDataURL());
-      let url = composeCanvas(
-        this.config.width,
-        this.config.height,
-        document.querySelector(".h5canvas"),
-        // this.canvas.toDataURL()
-        document.querySelector("#canvas")
-        // document.querySelector(".lower-canvas")
-      );
-      this.composeUrl = url;
-      console.log("url", url);
+    undo () {
+      // 返回上一步
+      let state = this.currItem.getPreState();
+      this.canvas.loadFromJSON(state, () => {
+        this.canvas.renderAll();
+      })
+      // this.currItem.getCurrState
     },
-    exportTest() {
-      this.baseUrl = this.currItem.h5exprot();
-    },
-    saveState() {
-      // this.$refs.h5canvas.save();
-      this.currItem.h5save();
-    },
-    reStoreState() {
-      this.currItem.geth5State("undo");
-    },
-    pre() {},
-    changeMode(mode) {
-      this.mode = mode;
-    },
-
-    initCanvas() {
-      let canvas = new fabric.Canvas("canvas", {
-        isDrawingMode: false,
-        width: 800,
-        height: 500
-      });
-      this.canvas = canvas;
-
+    addRect () {
       var rect = new fabric.Rect({
         top: 50, //距离画布上边的距离
         left: 100, //距离画布左侧的距离，单位是像素
@@ -120,12 +93,67 @@ export default {
       });
 
       this.canvas.add(rect);
+    },
+    composeImageTest () {
+      // console.log("this.canvas.toDataURL()", this.canvas.toDataURL());
+      let url = composeCanvas(
+        this.config.width,
+        this.config.height,
+        document.querySelector(".h5canvas"),
+        // this.canvas.toDataURL()
+        document.querySelector("#canvas")
+        // document.querySelector(".lower-canvas")
+      );
+      this.composeUrl = url;
+      console.log("url", url);
+    },
+    exportTest () {
+      this.baseUrl = this.currItem.h5exprot();
+    },
+    saveState () {
+      // this.$refs.h5canvas.save();
+      this.currItem.h5save();
+    },
+    reStoreState () {
+      this.currItem.geth5State("undo");
+    },
+    pre () { },
+    changeMode (mode) {
+      this.mode = mode;
+    },
+
+    initCanvas () {
+      let canvas = new fabric.Canvas("canvas", {
+        isDrawingMode: false,
+        width: 800,
+        height: 500
+      });
+
+      canvas.on("object:modified", () => {
+        console.log("object:modified");
+        let state = JSON.stringify(canvas);
+        this.currItem.save(state);
+      })
+      canvas.on("object:added", () => {
+        console.log("object:added");
+        let state = JSON.stringify(canvas);
+        this.currItem.save(state);
+      })
+      canvas.on("object:removed", () => {
+        console.log("object:removed")
+      })
+      // canvas.on("after:render", () => { })
+      this.canvas = canvas;
+
       this.loadedStatus = new Array(this.imagesList.lenthg).fill(false);
     },
-    switchToNext(index) {
+    switchToNext (index) {
       this.switchImage(index);
     },
-    async switchImage(index) {
+    save () {
+      // this.currItem.save(flag || false);
+    },
+    async switchImage (index) {
       // 每加载一张图片才会生成一个实例
       this.currIndex = index || 0;
 
@@ -150,25 +178,26 @@ export default {
                 left: center.left,
                 originX: "center",
                 originY: "center",
-                crossOrigin: "anonymous"
+                crossOrigin: "anonymous",
+                isBackImg: true,
               }
             );
             // 图片合法
             this.itemList.push(item);
             this.currItem = item;
             this.loadedStatus[this.currIndex] = true;
-            // fabric
-            // this.currItem.historyList.push(JSON.stringify(this.canvas));
             // 自动保存一条记录
-            this.currItem.save();
-            this.currItem.h5save();
+            this.currItem.h5save("init");
+            setTimeout(() => {
+              this.currItem.save(JSON.stringify(this.canvas), "init");
+            }, 100)
           }
         });
       } else {
         // 非首次加载
       }
     },
-    async switchImage1(index) {
+    async switchImagetest (index) {
       // 每加载一张图片才会生成一个实例
       this.currIndex = index || 0;
       if (this.isFirstRender) {
@@ -215,7 +244,7 @@ export default {
       );
       this.$refs.h5canvas.save();
     },
-    pathToCurve(path, controlPointsNum = 2) {
+    pathToCurve (path, controlPointsNum = 2) {
       // M 开始 L 结束
       let support = ["M", "L"];
       let curve = { 2: "Q", 3: "C" };
