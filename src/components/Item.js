@@ -53,47 +53,52 @@ export default class Item {
     }
     // this
   }
-  getPreHistory() {
-    console.log("getHis---length", this.historyList);
-    let historyIndex = this.historyIndex - 1;
-    console.log("getPreHistory----before", this.historyIndex);
-    if (historyIndex < 0) {
-      this.historyIndex = historyIndex;
-      console.log("history index out of range");
+  _findHistory() {
+    // h5 f f h5
+    // 回退的数据即就是相同type左边距最近data
+
+    // 没有历史记录即为初始状态
+    if (this.historyList.length === 0) {
       return [
         { type: "h5", data: this.h5.originState },
         { type: "fabric", data: this.originState }
       ];
     }
-    // let history = this.historyList[historyIndex];
-    // let historyList = []
-    //   .concat(this.historyList)
-    //   .slice(0, this.historyList.length - 2);
-    // history应该是
-    // for (let i = historyList.length - 1;i >=0 ; i--) {
-    //   if ()
-    // }
-    // let i =historyList.lastIndexOf()
-    // for (var i= historyList.length-1;i>=0;i--){
-    //     console.log(historyList[i]);
-    //     if ()
-    // }
-    // console.log("history", this.historyList[historyIndex]);
+    let historyList = this.historyList;
+    let length = this.historyList.length - 1;
+    console.log("type", "this.historyList", this.historyList);
+    let type = this.historyList[length].type;
+    let list = []
+      .concat(this.historyList)
+      .reverse()
+      .slice(1);
+    let history = null;
+    for (let i = 0; i < list.length; i++) {
+      if (list[i].type === type) {
+        history = list[i];
+        break;
+      }
+    }
+    // 临界状态 返回初始状态
     if (!history) {
-      console.log("no history");
+      history =
+        type === "fabric"
+          ? { type: "fabric", data: this.originState }
+          : { type: "h5", data: this.h5.originState };
+    }
+    this.historyList = historyList.slice(0, length);
+    console.log("_____findHistory", this.historyList);
+    return history;
+  }
+  getPreHistory() {
+    let history = this._findHistory();
+    if (Array.isArray(history)) {
       return null;
     }
-
+    let historyIndex = this.historyIndex - 1;
     this.historyIndex = historyIndex;
     console.log("getPreHistory--after", this.historyIndex);
     return history;
-    // if (this.historyList[historyIndex].type === "h5") {
-    //   // 原生
-    //   this.h5.canvas.putImageData(history, 0, 0);
-    // } else {
-    //   // fabirc
-    //   return history;
-    // }
   }
 
   isImageVaild() {
@@ -104,6 +109,7 @@ export default class Item {
     return this.historyIndex;
   }
   save(type, data, flag = false) {
+    console.log("---item---save---");
     if (flag === "init") {
       if (type === "h5") {
         this.h5.originState = data;
@@ -114,6 +120,7 @@ export default class Item {
       // this.historyList.push({h5: {data: }})
     }
     if (!flag) {
+      // console.log("---item---save---bbbbb");
       if (this.historyList.length) {
         if (
           JSON.stringify(data) ===
