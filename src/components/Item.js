@@ -4,7 +4,7 @@ export default class Item {
   constructor(options) {
     this.scale = 1;
     this.historyList = [];
-    this.currentStateIndex = -1;
+    this.historyIndex = -1;
     this.url = options.url;
     this.canvas = options.canvas;
     this.originState = null;
@@ -12,7 +12,7 @@ export default class Item {
       originState: null,
       canvas: options.h5canvas,
       historyList: [],
-      currentStateIndex: -1
+      historyIndex: -1
     };
     // this.h5canvas = options.h5canvas;
     // this.h5HistoryList = [];
@@ -24,16 +24,16 @@ export default class Item {
     // }
     //  this.url
   }
+  getHis() {
+    console.log("getHis---length", this.historyList.length);
+  }
 
-  getCurrState (index) {
-    // 当前状态 
-    // 
-    console.log("index", index, this.historyList);
-
+  getCurrState(index) {
+    // 当前状态
     if (!this.historyList.length) return;
 
     let historyList = this.historyList;
-    if (index < 0) {
+    if (index <= 0) {
       // 左边界
       this.h5.canvas.putImageData(this.h5.originState, 0, 0);
       this.historyList = [];
@@ -43,116 +43,145 @@ export default class Item {
     let data = historyList[index].data;
     if (historyList[index].type === "h5") {
       // 原生
-      console.log("data", data);
+      // console.log("data", data);
       this.h5.canvas.putImageData(data, 0, 0);
       // this.h5.canvas.putImageData(imageData, 0, 0);
-      return;
+      // return;
     } else {
       // fabirc
       return historyList[index].data;
     }
     // this
   }
-  getPreState () {
-    // this
-    console.log("currentStateIndex", this.currentStateIndex);
-    if (!this.historyList.length) return;
-    // if (this.currentStateIndex)
-    let index = this.currentStateIndex;
-    this.currentStateIndex = (index - 1) <= -1 ? -1 : (index - 1);
-    console.log("currentStateIndex", this.currentStateIndex);
-    return this.getCurrState(this.currentStateIndex);
-    // this.currentStateIndex
+  getPreHistory() {
+    console.log("getHis---length", this.historyList);
+    let historyIndex = this.historyIndex - 1;
+    console.log("getPreHistory----before", this.historyIndex);
+    if (historyIndex < 0) {
+      this.historyIndex = historyIndex;
+      console.log("history index out of range");
+      return [
+        { type: "h5", data: this.h5.originState },
+        { type: "fabric", data: this.originState }
+      ];
+    }
+    // let history = this.historyList[historyIndex];
+    // let historyList = []
+    //   .concat(this.historyList)
+    //   .slice(0, this.historyList.length - 2);
+    // history应该是
+    // for (let i = historyList.length - 1;i >=0 ; i--) {
+    //   if ()
+    // }
+    // let i =historyList.lastIndexOf()
+    // for (var i= historyList.length-1;i>=0;i--){
+    //     console.log(historyList[i]);
+    //     if ()
+    // }
+    // console.log("history", this.historyList[historyIndex]);
+    if (!history) {
+      console.log("no history");
+      return null;
+    }
+
+    this.historyIndex = historyIndex;
+    console.log("getPreHistory--after", this.historyIndex);
+    return history;
+    // if (this.historyList[historyIndex].type === "h5") {
+    //   // 原生
+    //   this.h5.canvas.putImageData(history, 0, 0);
+    // } else {
+    //   // fabirc
+    //   return history;
+    // }
   }
 
-  checkImageUrl () {
+  isImageVaild() {
     return isImageVaild(this.url);
   }
-  currItem () { }
-  getCurrStateIndex () {
-    return this.currentStateIndex;
+  currItem() {}
+  getCurrStateIndex() {
+    return this.historyIndex;
   }
-  save (data, flag = false) {
+  save(type, data, flag = false) {
     if (flag === "init") {
-      this.originState = data;
-      return;
+      if (type === "h5") {
+        this.h5.originState = data;
+      } else if (type === "fabric") {
+        this.originState = data;
+      }
+
+      // this.historyList.push({h5: {data: }})
     }
     if (!flag) {
-      if (this.h5.historyList.length) {
-        if (data === this.historyList[this.h5.historyList.length - 1]) {
+      if (this.historyList.length) {
+        if (
+          JSON.stringify(data) ===
+          JSON.stringify(this.historyList[this.historyList.length - 1].data)
+        ) {
           // 状态相等不保存
           return;
         }
       }
-      this.historyList.push({ data: data, type: "fabric" });
-      this.currentStateIndex = this.currentStateIndex + 1;
-    }
-
-    console.log("save", this.currentStateIndex);
-  }
-  h5save (flag = false) {
-    if (flag === "init") {
-      this.h5.originState = this.h5.canvas.saveImageData();
-      return;
-    }
-
-    if (!flag) {
-      let imageData = this.h5.canvas.saveImageData();
-      if (this.h5.historyList.length) {
-        if (JSON.stringify(imageData) === JSON.stringify(this.historyList[this.h5.historyList.length - 1])) {
-          // 状态相等不保存
-          return;
-        }
+      // 记录修改历史
+      // 未考虑保存历史记录数量过大的情况
+      let historyList = this.historyList;
+      let historyIndex = this.historyIndex;
+      console.log(
+        "type",
+        type,
+        "save---before",
+        this.historyIndex,
+        "length",
+        this.historyList.length
+      );
+      // 若从历史记录中的非终点开始进行了修改
+      // 则需要移除之后的历史记录，并将当前作为新的终点
+      // !注意，即使针对当前历史记录没有修改，也会进行保存，并抹掉之后的历史记录
+      if (historyIndex < historyList.length - 1) {
+        console.log("yes");
+        historyList = historyList.slice(0, historyIndex + 1);
       }
-      this.historyList.push({ data: imageData, type: "h5" });
-      this.currentStateIndex += 1;
+
+      historyList.push({ data, type });
+
+      historyIndex += 1;
+      this.historyList = historyList;
+
+      this.historyIndex = historyIndex;
     }
-
-    // let imageData = this.h5.canvas.saveImageData();
-    // if (this.h5.historyList.length) {
-    //   if (JSON.stringify(imageData) === JSON.stringify(this.historyList[this.h5.historyList.length - 1])) {
-    //     // 状态相等不保存
-    //     return;
-    //   }
-    // }
-
-    // this.h5.historyList.push(imageData);
-    // this.h5.currentStateIndex = this.h5.currentStateIndex + 1;
+    // "this.historyList",
+    // this.historyList
     console.log(
-      "this.h5.save",
-      this.historyList,
-      // this.h5.currentStateIndex
+      "save----after",
+      this.historyIndex,
+      "length",
+      this.historyList.length
     );
   }
-  geth5State (flag) {
+
+  geth5State(flag) {
     if (!this.h5.historyList.length) return;
     let imageData;
-    if (flag === "undo" && this.h5.currentStateIndex > 0) {
+    if (flag === "undo" && this.h5.historyIndex > 0) {
       // 回退
-      imageData = this.h5.historyList[this.h5.currentStateIndex - 1];
+      imageData = this.h5.historyList[this.h5.historyIndex - 1];
       this.h5.canvas.putImageData(imageData, 0, 0);
-      this.h5.currentStateIndex -= 1;
+      this.h5.historyIndex -= 1;
       // 始终保存最原始记录
       this.h5.historyList = this.h5.historyList.slice(
         0,
-        this.h5.currentStateIndex === 0 ? 1 : this.h5.currentStateIndex
+        this.h5.historyIndex === 0 ? 1 : this.h5.historyIndex
       );
-
-      // console.log(" this.h5.inded", this.h5.currentStateIndex);
-      // console.log("this.h5.historyList", this.h5.historyList);
     }
-
-    // if (!this.h5.hstoryList.length) return;
-    // this.ctx.putImageData(imageData, 0, 0);
-    // this.h5.currentStateIndex -= 1;
   }
-  h5undo () {
+  h5undo() {
     if (!this.h5.hstoryList.length) return;
-    let imageData = this.h5.historyList[this.h5.currentStateIndex - 1];
+    let imageData = this.h5.historyList[this.h5.historyIndex - 1];
     this.ctx.putImageData(imageData, 0, 0);
-    this.h5.currentStateIndex -= 1;
+    this.h5.historyIndex -= 1;
   }
-  h5exprot () {
+  h5exprot() {
     return this.h5.canvas.export();
   }
 }

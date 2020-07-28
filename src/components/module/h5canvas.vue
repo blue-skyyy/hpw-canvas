@@ -90,7 +90,8 @@ export default {
       "pointerup",
       (e) => {
         this.handleUp(e);
-        this.debounceMethod(this);
+        // this.debounceMethod(this);
+        this.item.save("h5", this.saveImageData());
       },
       false
     );
@@ -116,8 +117,8 @@ export default {
   },
   methods: {
     debounceMethod: debounce((that) => {
-      that.item.h5save();
       // 防抖
+      that.item.save("h5", that.saveImageData());
     }, 2000),
     handleUp(e) {
       if (!this.canDraw) return;
