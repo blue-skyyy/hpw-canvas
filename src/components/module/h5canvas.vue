@@ -3,6 +3,7 @@
 </template>
 <script>
 import { debounce } from "../../utils.js";
+import { fabric } from "fabric";
 const PEN_URL =
   "https://img.vipkidstatic.com/beeschool/server/1594090400039/%E7%AC%94.png";
 
@@ -31,6 +32,9 @@ export default {
     item: {
       type: Object,
       default: () => {}
+    },
+    fc: {
+      type: Object
     }
   },
   data() {
@@ -91,7 +95,7 @@ export default {
       (e) => {
         this.handleUp(e);
         // this.debounceMethod(this);
-        this.item.save("h5", this.saveImageData());
+        // this.item.save("h5", this.saveImageData());
       },
       false
     );
@@ -124,7 +128,8 @@ export default {
       if (!this.canDraw) return;
       const { x, y, pressure } = this.getPos(e);
       this.priviousPressure = pressure;
-      this.points.push({ x, y });
+      // this.points.push({ x, y });
+      this.points.push({ x, y, command: "L" });
       if (this.points.length > 3) {
         const lastTwoPoints = this.points.slice(-2);
         const controlPoint = lastTwoPoints[0];
@@ -150,14 +155,16 @@ export default {
       this.canDraw = true;
       const { x, y, pressure } = this.getPos(e);
       this.priviousPressure = pressure;
-      this.points.push({ x, y });
+      // this.points.push({ x, y });
+      this.points.push({ x, y, command: "M" });
       this.beginPoint = { x, y };
     },
     handleMove(e) {
       if (!this.canDraw) return;
       const { x, y, pressure } = this.getPos(e);
       this.priviousPressure = pressure;
-      this.points.push({ x, y });
+      // this.points.push({ x, y });
+      this.points.push({ x, y, command: "L" });
       if (this.points.length > 3) {
         const lastTwoPoints = this.points.slice(-2);
         const controlPoint = lastTwoPoints[0];
@@ -198,21 +205,21 @@ export default {
       this.ctx.lineWidth = width;
       this.ctx.stroke();
       this.ctx.closePath();
-      // let p = this.pathToCurve(this.points);
-      // var path = new fabric.Path(p, {
-      //   fill: null,
-      //   stroke: this.color,
-      //   strokeWidth: width,
-      //   strokeLineCap: "round",
-      //   strokeLineJoin: "round",
-      //   evented: false,
-      //   hasControls: false,
-      //   hasBorders: false,
-      //   selectable: false,
-      //   isDrawingMode: false,
-      //   // strokeStyle
-      // });
-      // this.canvas.add(path);
+      let p = this.pathToCurve(this.points);
+      var path = new fabric.Path(p, {
+        fill: null,
+        stroke: this.color,
+        strokeWidth: width,
+        strokeLineCap: "round",
+        strokeLineJoin: "round",
+        evented: false,
+        hasControls: false,
+        hasBorders: false,
+        selectable: true,
+        isDrawingMode: false
+        // strokeStyle
+      });
+      this.fc.add(path);
     },
     saveImageData() {
       let imgData = this.ctx.getImageData(
@@ -229,6 +236,27 @@ export default {
     export() {
       return this.canvas.toDataURL("image/jpeg", 1.0);
       // console.log("p", p);
+    },
+    pathToCurve(path, controlPointsNum = 2) {
+      // M 开始 L 结束
+      let support = ["M", "L"];
+      let curve = { 2: "Q", 3: "C" };
+      let str = "";
+      for (let i = 0; i < path.length; i++) {
+        let { command, x, y } = path[i];
+        if (!support.includes(command)) {
+          throw new Error(`${command} is not support width start`);
+        }
+        if (i % controlPointsNum === 0) {
+          // 剩余点数不够组成曲线时使用L
+          let cmd =
+            i + controlPointsNum <= path.length ? curve[controlPointsNum] : "L";
+          str += ` ${cmd} ${x} ${y}`;
+        } else {
+          str += ` ${x} ${y}`;
+        }
+      }
+      return str;
     }
   }
 };
@@ -236,8 +264,8 @@ export default {
 
 <style lang="less" scoped>
 .h5_canvas {
-  position: absolute;
-  border: 1px solid red;
+  // position: absolute;
+  border: 1px solid green;
   top: 0;
 }
 </style>

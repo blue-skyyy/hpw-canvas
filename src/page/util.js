@@ -1,0 +1,45 @@
+const imageList = [
+  "http://b.hiphotos.baidu.com/image/pic/item/359b033b5bb5c9ea5c0e3c23d139b6003bf3b374.jpg",
+  "https://upload-images.jianshu.io/upload_images/5809200-7fe8c323e533f656.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240",
+  "https://upload-images.jianshu.io/upload_images/5809200-03bbbd715c24750e.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240",
+  "http://a.hiphotos.baidu.com/image/pic/item/8d5494eef01f3a292d2472199d25bc315d607c7c.jpg",
+  "http://g.hiphotos.baidu.com/image/pic/item/6d81800a19d8bc3e770bd00d868ba61ea9d345f2.jpg"
+];
+
+const scaleWH = (imageW, imageH, maxWidth, maxHeight) => {
+  // 用于设定图片的宽度和高度
+  let tempWidth;
+  let tempHeight;
+
+  if (imageW > 0 && imageH > 0) {
+    //原图片宽高比例 大于 指定的宽高比例，这就说明了原图片的宽度必然 > 高度
+    if (imageW / imageH >= maxWidth / maxHeight) {
+      if (imageW > maxWidth) {
+        tempWidth = maxWidth;
+        // 按原图片的比例进行缩放
+        tempHeight = (imageH * maxWidth) / imageW;
+      } else {
+        // 按原图片的大小进行缩放
+        tempWidth = imageW;
+        tempHeight = imageH;
+      }
+    } else {
+      // 原图片的高度必然 > 宽度
+      if (imageH > maxHeight) {
+        tempHeight = maxHeight;
+        // 按原图片的比例进行缩放
+        tempWidth = (imageW * maxHeight) / imageH;
+      } else {
+        // 按原图片的大小进行缩放
+        tempWidth = imageW;
+        tempHeight = imageH;
+      }
+    }
+    return {
+      width: tempWidth,
+      height: tempHeight
+    };
+  }
+};
+
+export { scaleWH, imageList };

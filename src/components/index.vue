@@ -10,6 +10,7 @@
         ref="h5canvas"
         :item="currItem"
         class="h5canvas"
+        :fc="canvas"
       ></h5-canvas>
     </div>
     <button @click="changeMode('pencil')">画笔模式</button>
@@ -253,8 +254,10 @@ export default {
               this.imagesList[this.currIndex],
               this.canvas.renderAll.bind(this.canvas),
               {
-                scaleX: 1,
-                scaleY: 1,
+                // scaleX: 1.2,
+                // scaleY: 1.2,
+                width: this.canvas.width,
+                height: this.canvas.height,
                 top: center.top,
                 left: center.left,
                 originX: "center",

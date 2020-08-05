@@ -14,15 +14,6 @@ export default class Item {
       historyList: [],
       historyIndex: -1
     };
-    // this.h5canvas = options.h5canvas;
-    // this.h5HistoryList = [];
-    // this.h5StateIndex = -1;
-    // this.h5Current
-    // this.url = url;
-    // checkImage() {
-
-    // }
-    //  this.url
   }
   getHis() {
     console.log("getHis---length", this.historyList.length);

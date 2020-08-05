@@ -1,7 +1,6 @@
 <template>
   <div id="app">
-    <hpw-canvas></hpw-canvas>
-    <!-- <test></test> -->
+    <router-view />
     <!-- <img alt="Vue logo" src="./assets/logo.png" /> -->
     <!-- <HelloWorld msg="Welcome to Your Vue.js Appss" /> -->
   </div>
@@ -9,20 +8,19 @@
 
 <script>
 // import HelloWorld from "./components/HelloWorld.vue";
-import hpwCanvas from "./components/index";
 // import test from "./components/a";
 
 export default {
-  name: "App",
-  components: {
-    // HelloWorld,
-    hpwCanvas
-    // test
-  }
+  name: "App"
 };
 </script>
 
 <style>
+html,
+body {
+  padding: 0;
+  margin: 0;
+}
 #app {
   font-family: Avenir, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
