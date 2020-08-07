@@ -24,6 +24,7 @@ class Item {
     // 针对 correction-work 版本
     this.zoom = 1;
     this.conWH = options.conWH;
+    this.bgImg = options.bgImg;
 
     // 获取图片size，同时检测图片是否合法
     // TODO 考虑改为异步执行
@@ -49,6 +50,7 @@ class Item {
   }
 
   save(newUrl, history) {
+    console.log("fff", history);
     let jsonState = JSON.stringify(history);
     // 没有进行任何修改，则不产生新的历史记录
     if (jsonState === this.lastState) {

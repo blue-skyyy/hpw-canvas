@@ -1,6 +1,6 @@
 import Vue from "vue";
 import Router from "vue-router";
-const Index = () => import("./App.vue");
+const Index = () => import("./components/index.vue");
 // const fabric = () => import("./components/fabric.vue");
 const fabric = () => import("./page/index.vue");
 
