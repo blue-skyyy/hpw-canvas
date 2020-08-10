@@ -16,6 +16,7 @@ export default {
 </script>
 
 <style>
+@import "./assets/styles/normalize.css";
 html,
 body {
   padding: 0;

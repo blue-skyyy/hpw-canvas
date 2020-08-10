@@ -1,7 +1,7 @@
 <template>
-  <div>
+  <div id="container">
     <div id="image_canvas_wrap" ref="image_canvas_wrap">
-      <canvas id="image_canvas"></canvas>
+      <canvas id="image_canvas" ref="image_canvas"></canvas>
     </div>
     <button @click="addrect">添加对象</button>
     <button @click="delreact">删除对象</button>
@@ -10,47 +10,70 @@
     <button @click="saveCurrState">保存</button>
     <button @click="undo">上一步</button>
     <button @click="test">测试</button>
-    <menu-drag />
+    <menu-drag :mode="mode" :canvas="canvas" @click="switchMode('drag')" />
+    <menu-pencil
+      :mode="mode"
+      :canvas="canvas"
+      @click="switchMode('pencil')"
+      ref="pencil"
+    />
   </div>
 </template>
 
 <script>
 import { fabric } from "fabric";
+import Pressure from "pressure";
 import { imageList } from "./util.js";
 import Item from "./Item";
 import MenuDrag from "./menu/drag.vue";
+import MenuPencil from "./menu/pencil.vue";
+
 const methods = {
+  freeDraw(canvas) {
+    var hLinePatternBrush = new fabric.PatternBrush(canvas);
+    hLinePatternBrush.getPatternSrc = (function(fabric) {
+      return function() {
+        var patternCanvas = fabric.document.createElement("canvas");
+        patternCanvas.width = patternCanvas.height = 10;
+        var ctx = patternCanvas.getContext("2d");
+        ctx.strokeStyle = "green";
+        ctx.lineWidth = 40;
+        ctx.beginPath();
+        ctx.moveTo(5, 0);
+        ctx.lineTo(5, 10);
+        ctx.closePath();
+        ctx.stroke();
+        return patternCanvas;
+      };
+    })(fabric);
+
+    canvas.freeDrawingBrush = hLinePatternBrush;
+    canvas.freeDrawingBrush.width = 20;
+  },
+  switchMode(mode) {
+    this.mode = mode;
+
+    // if (mode === "pencil") {
+    //   console.log("yes", this.$refs.pencil);
+    //   this.canvas.isDrawingMode = true;
+    //   this.canvas.on("mouse:down", this.$refs.pencil.handleDown);
+    //   this.canvas.on("mouse:up", this.$refs.pencil.handleUp);
+    //   this.canvas.on("mouse:move", this.$refs.pencil.handleUp);
+    // }
+  },
   test() {
+    console.log("res");
+    Pressure.set("#image_canvas_wrap", {
+      change: (d) => {
+        console.log("preesure", d);
+      }
+    });
+    // this.freeDrawingBrushWidth = 40;
     // this.canvas.absolutePan({ x: 10, y: 10 });
     // this.canvas.renderAll();
-    var units = 10;
-    var delta = new fabric.Point(0, units);
-    this.canvas.relativePan(delta);
-  },
-  drag(e) {
-    let odiv = e.target; //获取目标元素
-
-    //算出鼠标相对元素的位置
-    let disX = e.clientX - odiv.offsetLeft;
-    let disY = e.clientY - odiv.offsetTop;
-    document.onmousemove = (e) => {
-      //鼠标按下并移动的事件
-      //用鼠标的位置减去鼠标相对元素的位置，得到元素的位置
-      let left = e.clientX - disX;
-      let top = e.clientY - disY;
-
-      //绑定元素位置到positionX和positionY上面
-      this.positionX = top;
-      this.positionY = left;
-
-      //移动当前元素
-      odiv.style.left = left + "px";
-      odiv.style.top = top + "px";
-    };
-    document.onmouseup = () => {
-      document.onmousemove = null;
-      document.onmouseup = null;
-    };
+    //   var units = 10;
+    //   var delta = new fabric.Point(0, units);
+    //   this.canvas.relativePan(delta);
   },
   addrect() {
     var rect = new fabric.Rect({
@@ -91,17 +114,27 @@ const methods = {
     this.canvas.on("object:removed", this.dealRemove);
     this.canvas.on("path:created", this.dealCreated);
   },
-  dealCreated(e) {
-    console.log("e", e);
+  dealCreated() {
+    // console.log("e", e);
   },
   toNext() {
     this.currIndex += 1;
     this.switchImage(this.currIndex);
   },
-  dealAdd() {
-    // console.log("----dealAdd----");
-
+  dealAdd(e) {
+    console.log("----dealAdd----", e);
     if (this.historyChanging) return;
+    if (e.target.isBg) return;
+    if (!e.target.isContainedWithinObject(this.currItem.bgImg)) {
+      e.target.set({
+        hasBorders: false,
+        hasControls: false,
+        selectable: false
+      });
+      this.canvas.remove(e.target);
+      setTimeout(() => alert("请在图片范围内操作"), 500);
+      return;
+    }
     // this.save();
   },
   dealModify() {
@@ -138,6 +171,7 @@ const methods = {
         bgImg.scaleY = scaleY;
         bgImg.scaleX = scaleX;
         bgImg.zIndex = 1;
+        bgImg.isBg = true;
         this.clearBoard();
         this.setCanvasWH(imageInfo.scale.width, imageInfo.scale.height);
         // 初次加载的Image，需要自动创建一条历史记录
@@ -187,9 +221,7 @@ const methods = {
     this.currItem.save("dt===", this.canvas.toJSON());
   },
   undo() {
-    // debugger;
     let h = this.currItem.getPreHistory();
-    console.log("h", h);
     this.canvas.loadFromJSON(h, () => {
       this.canvas.renderAll();
     });
@@ -198,8 +230,10 @@ const methods = {
 export default {
   mounted() {
     let canvas = new fabric.Canvas("image_canvas", {
-      isDrawingMode: true
+      // isDrawingMode: true
     });
+    // var f = fabric;
+    // canvas.freeDrawingBrush = new fabric.SprayBrush(canvas);
 
     let containerDOM;
     this.$nextTick(() => {
@@ -214,7 +248,8 @@ export default {
 
     this.initCanvas();
 
-    //
+    // this.freeDraw(canvas);
+
     this.itemList = this.itemList.map((d) => {
       return {
         url: d,
@@ -232,17 +267,24 @@ export default {
       historyChanging: false,
       itemList: imageList,
       currIndex: -1,
-      currItem: null
+      currItem: null,
+      panning: false,
+      mode: "",
+      freeDrawingBrushWidth: 20
       // statusList: null,
     };
   },
   components: {
-    MenuDrag
+    MenuDrag,
+    MenuPencil
   }
 };
 </script>
 
 <style lang="less" scoped>
+#container {
+  overflow: hidden;
+}
 #image_canvas_wrap {
   box-sizing: border-box;
   width: 800px;

@@ -1,40 +1,60 @@
 <template>
-  <div @mousedown="drag">
+  <button @click="dealClick">
     拖拽
-  </div>
+  </button>
 </template>
 
 <script>
+import { fabric } from "fabric";
 export default {
+  props: {
+    mode: {
+      default: "",
+      type: String
+    },
+    canvas: {
+      default: () => {},
+      type: Object
+    }
+  },
   data() {
     return {};
   },
   methods: {
-    drag(e) {
-      e = document.querySelector("#image_canvas");
-      let odiv = e.target; //获取目标元素
-
-      //算出鼠标相对元素的位置
-      let disX = e.clientX - odiv.offsetLeft;
-      let disY = e.clientY - odiv.offsetTop;
-      document.onmousemove = (e) => {
-        //鼠标按下并移动的事件
-        //用鼠标的位置减去鼠标相对元素的位置，得到元素的位置
-        let left = e.clientX - disX;
-        let top = e.clientY - disY;
-
-        //绑定元素位置到positionX和positionY上面
-        this.positionX = top;
-        this.positionY = left;
-
-        //移动当前元素
-        odiv.style.left = left + "px";
-        odiv.style.top = top + "px";
-      };
-      document.onmouseup = () => {
-        document.onmousemove = null;
-        document.onmouseup = null;
-      };
+    dealClick() {
+      this.$emit("click");
+    }
+  },
+  watch: {
+    mode(newMode) {
+      if (newMode === "drag") {
+        this.canvas.off("mouse:down");
+        this.canvas.off("mouse:up");
+        this.canvas.off("mouse:move");
+        console.log("drag===========add======Event");
+        this.canvas.on({
+          "mouse:down": () => {
+            this.panning = true;
+            this.canvas.selection = false;
+          },
+          "mouse:up": () => {
+            this.panning = false;
+            this.canvas.selection = true;
+          },
+          "mouse:move": (e) => {
+            if (this.panning && e && e.e) {
+              let delta = new fabric.Point(e.e.movementX, e.e.movementY);
+              this.canvas.relativePan(delta);
+            }
+          }
+        });
+      }
+      // if (newMode !== "drag" && this.canvas) {
+      //   console.log("drag===========remove========Event");
+      //   this.canvas.off("mouse:down");
+      //   this.canvas.off("mouse:up");
+      //   this.canvas.off("mouse:move");
+      // }
     }
   }
 };
@@ -42,13 +62,7 @@ export default {
 
 <style lang="less" scoped>
 div {
-  background: red;
-  padding: 10px;
-  position: absolute; /*定位*/
-  top: 10px;
-  left: 10px;
-  width: 200px;
-  height: 200px;
-  background: #666;
+  // background: red;
+  display: inline-block;
 }
 </style>
