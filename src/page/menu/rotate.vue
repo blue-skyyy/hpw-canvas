@@ -1,6 +1,7 @@
 <template>
   <div>
-    <button @click="restore">恢复</button>
+    <button @click="rotateTo('left')">左旋转</button>
+    <button @click="rotateTo('right')">右旋转</button>
   </div>
 </template>
 
@@ -11,31 +12,27 @@ export default {
     canvas: {
       type: Object,
       default: () => {}
-    },
-    bg: {
-      type: Object,
-      default: () => {}
     }
   },
   methods: {
-    restore() {
-      // 缩放
-      let center = this.canvas.getCenter();
-      let zoomPoint = new fabric.Point(center.left, center.top);
-      this.canvas.zoomToPoint(zoomPoint, 1);
-
-      // 位置
+    rotateTo(direction) {
+      // 作为组整体旋转
       this.canvas.discardActiveObject();
       let sel = new fabric.ActiveSelection(this.canvas.getObjects(), {
         canvas: this.canvas,
         cornerSize: 0,
-        hasBorders: false,
-        selectable: false,
         hasControls: false
       });
-      sel.left = 0;
-      sel.top = 0;
+
       this.canvas.setActiveObject(sel);
+
+      if (direction === "left") {
+        sel.rotate(-90);
+      }
+
+      if (direction === "right") {
+        sel.rotate(90);
+      }
 
       this.canvas.renderAll();
     }

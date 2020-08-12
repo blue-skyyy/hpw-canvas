@@ -23,6 +23,7 @@
       :canvas="canvas"
       :bg="currItem && currItem.bgImg"
     ></menu-restore>
+    <menu-rotate :canvas="canvas"> </menu-rotate>
   </div>
 </template>
 
@@ -35,6 +36,7 @@ import MenuDrag from "./menu/drag.vue";
 import MenuPencil from "./menu/pencil.vue";
 import MenuZoom from "./menu/zoom.vue";
 import MenuRestore from "./menu/restore.vue";
+import MenuRotate from "./menu/rotate.vue";
 const methods = {
   mouseWheel() {
     var zoom = (event.deltaY > 0 ? -0.1 : 0.1) + this.canvas.getZoom();
@@ -183,16 +185,21 @@ const methods = {
         bgImg.hasBorders = false;
         bgImg.hasControls = false;
         bgImg.selectable = false;
-        bgImg.scaleable = false;
         bgImg.scaleY = scaleY;
         bgImg.scaleX = scaleX;
+        // bgImg.translateX = "center";
+        // bgImg.translateY = "center";
+        // bgImg.left = 0;
+        // bgImg.top = 0;
         bgImg.zIndex = 1;
         bgImg.isBg = true;
         this.clearBoard();
         this.setCanvasWH(imageInfo.scale.width, imageInfo.scale.height);
         // 初次加载的Image，需要自动创建一条历史记录
         // this.save();
+        bgImg.sendToBack();
         this.currItem.bgImg = bgImg;
+
         this.canvas.add(bgImg);
         this.canvas.renderAll();
         this.historyChanging = false;
@@ -294,7 +301,8 @@ export default {
     MenuDrag,
     MenuPencil,
     MenuZoom,
-    MenuRestore
+    MenuRestore,
+    MenuRotate
   }
 };
 </script>

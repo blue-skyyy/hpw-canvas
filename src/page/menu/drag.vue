@@ -31,30 +31,12 @@ export default {
         this.canvas.off("mouse:down");
         this.canvas.off("mouse:up");
         this.canvas.off("mouse:move");
-        console.log("drag===========add======Event");
-        this.canvas.on({
-          "mouse:down": () => {
-            this.panning = true;
-            this.canvas.selection = false;
-          },
-          "mouse:up": () => {
-            this.panning = false;
-            this.canvas.selection = true;
-          },
-          "mouse:move": (e) => {
-            if (this.panning && e && e.e) {
-              let delta = new fabric.Point(e.e.movementX, e.e.movementY);
-              this.canvas.relativePan(delta);
-            }
-          }
+        var sel = new fabric.ActiveSelection(this.canvas.getObjects(), {
+          canvas: this.canvas
         });
+        this.canvas.setActiveObject(sel);
+        this.canvas.requestRenderAll();
       }
-      // if (newMode !== "drag" && this.canvas) {
-      //   console.log("drag===========remove========Event");
-      //   this.canvas.off("mouse:down");
-      //   this.canvas.off("mouse:up");
-      //   this.canvas.off("mouse:move");
-      // }
     }
   }
 };
