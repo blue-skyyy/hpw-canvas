@@ -17,6 +17,12 @@
       @click="switchMode('pencil')"
       ref="pencil"
     />
+    <menu-zoom zoomStatus="zoom_out" :canvas="canvas" />
+    <menu-zoom zoomStatus="zoom_in" :canvas="canvas" />
+    <menu-restore
+      :canvas="canvas"
+      :bg="currItem && currItem.bgImg"
+    ></menu-restore>
   </div>
 </template>
 
@@ -27,8 +33,16 @@ import { imageList } from "./util.js";
 import Item from "./Item";
 import MenuDrag from "./menu/drag.vue";
 import MenuPencil from "./menu/pencil.vue";
-
+import MenuZoom from "./menu/zoom.vue";
+import MenuRestore from "./menu/restore.vue";
 const methods = {
+  mouseWheel() {
+    var zoom = (event.deltaY > 0 ? -0.1 : 0.1) + this.canvas.getZoom();
+    zoom = Math.max(0.1, zoom); //最小为原来的1/10
+    zoom = Math.min(3, zoom); //最大是原来的3倍
+    var zoomPoint = new fabric.Point(event.pageX, event.pageY);
+    this.canvas.zoomToPoint(zoomPoint, zoom);
+  },
   freeDraw(canvas) {
     var hLinePatternBrush = new fabric.PatternBrush(canvas);
     hLinePatternBrush.getPatternSrc = (function(fabric) {
@@ -112,7 +126,9 @@ const methods = {
     this.canvas.on("object:added", this.dealAdd);
     this.canvas.on("object:modified", this.dealModify);
     this.canvas.on("object:removed", this.dealRemove);
-    this.canvas.on("path:created", this.dealCreated);
+
+    // this.canvas.on("mouse:wheel", this.mouseWheel);
+    // this.canvas.on("path:created", this.dealCreated);
   },
   dealCreated() {
     // console.log("e", e);
@@ -276,7 +292,9 @@ export default {
   },
   components: {
     MenuDrag,
-    MenuPencil
+    MenuPencil,
+    MenuZoom,
+    MenuRestore
   }
 };
 </script>

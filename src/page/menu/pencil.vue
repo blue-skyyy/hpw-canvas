@@ -48,7 +48,7 @@ export default {
       var hLinePatternBrush = new fabric.PatternBrush(this.canvas);
       hLinePatternBrush.getPatternSrc = (function(fabric) {
         return function() {
-          console.log("fff");
+          // console.log("fff");
           var patternCanvas = fabric.document.createElement("canvas");
           patternCanvas.width = patternCanvas.height = 10;
           var ctx = patternCanvas.getContext("2d");
