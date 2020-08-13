@@ -22,8 +22,9 @@
     <menu-restore
       :canvas="canvas"
       :bg="currItem && currItem.bgImg"
+      :currItem="currItem"
     ></menu-restore>
-    <menu-rotate :canvas="canvas"> </menu-rotate>
+    <menu-rotate :canvas="canvas" :currItem="currItem"> </menu-rotate>
   </div>
 </template>
 
@@ -187,10 +188,10 @@ const methods = {
         bgImg.selectable = false;
         bgImg.scaleY = scaleY;
         bgImg.scaleX = scaleX;
-        // bgImg.translateX = "center";
-        // bgImg.translateY = "center";
-        // bgImg.left = 0;
-        // bgImg.top = 0;
+        bgImg.translateX = "center";
+        bgImg.translateY = "center";
+        bgImg.left = 0;
+        bgImg.top = 0;
         bgImg.zIndex = 1;
         bgImg.isBg = true;
         this.clearBoard();
@@ -320,6 +321,7 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: scroll;
   #image_canvas {
     height: 100%;
     width: 100%;
