@@ -24,7 +24,12 @@ export default {
   methods: {
     restore() {
       this.canvas.discardActiveObject();
+
       const { imageInfo, rotate } = this.currItem;
+
+      this.canvas.setWidth(imageInfo.scale.width);
+      this.canvas.setHeight(imageInfo.scale.height);
+
       let sel = new fabric.ActiveSelection(this.canvas.getObjects(), {
         canvas: this.canvas,
         cornerSize: 0,
@@ -37,9 +42,6 @@ export default {
       // 位置
       sel.left = 0;
       sel.top = 0;
-
-      this.canvas.setWidth(imageInfo.scale.width);
-      this.canvas.setHeight(imageInfo.scale.height);
 
       // 旋转
       sel.rotate(-rotate);

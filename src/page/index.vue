@@ -3,6 +3,27 @@
     <div id="image_canvas_wrap" ref="image_canvas_wrap">
       <canvas id="image_canvas" ref="image_canvas"></canvas>
     </div>
+    <div id="menu">
+      <menu-pencil
+        :mode="mode"
+        :canvas="canvas"
+        @click="switchMode('pencil')"
+        :color="myConfig && myConfig.color"
+        :pencilSizeList="myConfig && myConfig.pencilSizeList"
+        :pencilSize="myConfig && myConfig.pencilSize"
+        @changeConfig="changeConfig"
+        ref="pencil"
+        class="menu_item"
+      />
+      <menu-color
+        @click="switchMode('color')"
+        class="menu_item"
+        :colorList="myConfig && myConfig.colorList"
+        :mode="mode"
+        @changeConfig="changeConfig"
+      >
+      </menu-color>
+    </div>
     <button @click="addrect">添加对象</button>
     <button @click="delreact">删除对象</button>
     <button @click="prev">上一张</button>
@@ -11,12 +32,7 @@
     <button @click="undo">上一步</button>
     <button @click="test">测试</button>
     <menu-drag :mode="mode" :canvas="canvas" @click="switchMode('drag')" />
-    <menu-pencil
-      :mode="mode"
-      :canvas="canvas"
-      @click="switchMode('pencil')"
-      ref="pencil"
-    />
+
     <menu-zoom zoomStatus="zoom_out" :canvas="canvas" />
     <menu-zoom zoomStatus="zoom_in" :canvas="canvas" />
     <menu-restore
@@ -30,7 +46,6 @@
 
 <script>
 import { fabric } from "fabric";
-import Pressure from "pressure";
 import { imageList } from "./util.js";
 import Item from "./Item";
 import MenuDrag from "./menu/drag.vue";
@@ -38,7 +53,12 @@ import MenuPencil from "./menu/pencil.vue";
 import MenuZoom from "./menu/zoom.vue";
 import MenuRestore from "./menu/restore.vue";
 import MenuRotate from "./menu/rotate.vue";
+import MenuColor from "./menu/color.vue";
 const methods = {
+  changeConfig(prop, value) {
+    this.myConfig[prop] = value;
+    console.log(" this.myConfig----change", this.myConfig);
+  },
   mouseWheel() {
     var zoom = (event.deltaY > 0 ? -0.1 : 0.1) + this.canvas.getZoom();
     zoom = Math.max(0.1, zoom); //最小为原来的1/10
@@ -46,7 +66,8 @@ const methods = {
     var zoomPoint = new fabric.Point(event.pageX, event.pageY);
     this.canvas.zoomToPoint(zoomPoint, zoom);
   },
-  freeDraw(canvas) {
+  freeDraw(canvas = this.canvas) {
+    this.canvas.isDrawingMode = true;
     var hLinePatternBrush = new fabric.PatternBrush(canvas);
     hLinePatternBrush.getPatternSrc = (function(fabric) {
       return function() {
@@ -54,7 +75,7 @@ const methods = {
         patternCanvas.width = patternCanvas.height = 10;
         var ctx = patternCanvas.getContext("2d");
         ctx.strokeStyle = "green";
-        ctx.lineWidth = 40;
+        ctx.lineWidth = 10;
         ctx.beginPath();
         ctx.moveTo(5, 0);
         ctx.lineTo(5, 10);
@@ -65,32 +86,18 @@ const methods = {
     })(fabric);
 
     canvas.freeDrawingBrush = hLinePatternBrush;
-    canvas.freeDrawingBrush.width = 20;
+    // canvas.freeDrawingBrush.width = 20;
   },
   switchMode(mode) {
+    // console.log("mode", mode);
+    if (this.mode === mode) {
+      this.mode = "";
+      return;
+    }
     this.mode = mode;
-
-    // if (mode === "pencil") {
-    //   console.log("yes", this.$refs.pencil);
-    //   this.canvas.isDrawingMode = true;
-    //   this.canvas.on("mouse:down", this.$refs.pencil.handleDown);
-    //   this.canvas.on("mouse:up", this.$refs.pencil.handleUp);
-    //   this.canvas.on("mouse:move", this.$refs.pencil.handleUp);
-    // }
   },
   test() {
-    console.log("res");
-    Pressure.set("#image_canvas_wrap", {
-      change: (d) => {
-        console.log("preesure", d);
-      }
-    });
-    // this.freeDrawingBrushWidth = 40;
-    // this.canvas.absolutePan({ x: 10, y: 10 });
-    // this.canvas.renderAll();
-    //   var units = 10;
-    //   var delta = new fabric.Point(0, units);
-    //   this.canvas.relativePan(delta);
+    this.freeDraw(this.canvas);
   },
   addrect() {
     var rect = new fabric.Rect({
@@ -145,13 +152,13 @@ const methods = {
     if (this.historyChanging) return;
     if (e.target.isBg) return;
     if (!e.target.isContainedWithinObject(this.currItem.bgImg)) {
-      e.target.set({
-        hasBorders: false,
-        hasControls: false,
-        selectable: false
-      });
-      this.canvas.remove(e.target);
-      setTimeout(() => alert("请在图片范围内操作"), 500);
+      // e.target.set({
+      //   hasBorders: false,
+      //   hasControls: false,
+      //   selectable: false
+      // });
+      // this.canvas.remove(e.target);
+      // setTimeout(() => alert("请在图片范围内操作"), 500);
       return;
     }
     // this.save();
@@ -284,7 +291,19 @@ export default {
     this.toNext();
   },
   methods,
+  props: {
+    config: {
+      default: () => {},
+      type: Object
+    }
+  },
   data() {
+    const defaultConfig = {
+      colorList: ["red", "green", "blue", "pink"],
+      color: "red",
+      pencilSizeList: [10, 15, 20, 40],
+      pencilSize: 10
+    };
     return {
       canvas: null,
       conWH: {},
@@ -294,7 +313,10 @@ export default {
       currItem: null,
       panning: false,
       mode: "",
-      freeDrawingBrushWidth: 20
+      freeDrawingBrushWidth: 20,
+      myConfig: Object.assign({}, defaultConfig, this.config)
+
+      // colors: {}
       // statusList: null,
     };
   },
@@ -303,7 +325,8 @@ export default {
     MenuPencil,
     MenuZoom,
     MenuRestore,
-    MenuRotate
+    MenuRotate,
+    MenuColor
   }
 };
 </script>
@@ -327,6 +350,17 @@ export default {
     width: 100%;
     border: 1px solid red;
     position: absolute;
+  }
+}
+#menu {
+  width: 800px;
+  height: 50px;
+  border: 1px solid pink;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  .menu_item {
+    flex: 1;
   }
 }
 </style>

@@ -1,14 +1,22 @@
 <template>
-  <div>
-    <button @click="dealClick">
-      画笔
-    </button>
-    <span>{{ pressure }}</span>
+  <div class="menu_pencil">
+    <div @click="dealClick" v-html="pencil" class="pencil_icon"></div>
+    <div class="pencil_box" v-show="isShow">
+      <div
+        class="pencil_item"
+        v-for="(d, index) in pencilSizeList"
+        @click.stop="changePencilSize(d)"
+        :key="index"
+        :style="setStyle(index)"
+      ></div>
+    </div>
   </div>
 </template>
 <script>
-import { fabric } from "fabric";
+// import { fabric } from "fabric";
 // import Pressure from "pressure";
+
+import icons from "../icons.js";
 export default {
   name: "pencil",
   props: {
@@ -19,6 +27,18 @@ export default {
     canvas: {
       default: () => {},
       type: Object
+    },
+    color: {
+      default: "",
+      type: String
+    },
+    pencilSizeList: {
+      default: () => [],
+      type: Array
+    },
+    pencilSize: {
+      default: 1,
+      type: Number
     }
   },
   data() {
@@ -29,42 +49,55 @@ export default {
       beginPoint: null,
       endPoint: null,
       pressure: null,
-      baseLineList: [6, 10, 15, 25]
+      // baseLineList: [6, 10, 15, 25],
+      pencil: icons.pencil,
+      isShow: false
     };
   },
-  mounted() {
-    // this.canvas.on("mouse:down", this.handleDown);
-    // this.canvas.on("mouse:up", this.hanleUp);
-    // this.canvas.on("mouse:move", this.hanleMove);
-    // console.log("this.canvas", this.canvas, this.canvas.handleDown);
-    // this.canvas.isDrawingMode = true;
+  computed: {
+    setStyle() {
+      return function(index) {
+        return {
+          width: `${4 * (index + 2)}px`,
+          height: `${4 * (index + 2)}px`
+        };
+      };
+    }
   },
   methods: {
+    changePencilSize(size) {
+      console.log("size", size);
+      this.$emit("changeConfig", "pencilSize", size);
+      this.isShow = false;
+    },
     dealClick() {
       this.$emit("click");
     },
 
     freeDraw() {
-      var hLinePatternBrush = new fabric.PatternBrush(this.canvas);
-      hLinePatternBrush.getPatternSrc = (function(fabric) {
-        return function() {
-          // console.log("fff");
-          var patternCanvas = fabric.document.createElement("canvas");
-          patternCanvas.width = patternCanvas.height = 10;
-          var ctx = patternCanvas.getContext("2d");
-          ctx.strokeStyle = "green";
-          ctx.lineWidth = 40;
-          ctx.beginPath();
-          ctx.moveTo(5, 0);
-          ctx.lineTo(5, 10);
-          ctx.closePath();
-          ctx.stroke();
-          return patternCanvas;
-        };
-      })(fabric);
+      // const that = this;
+      // var hLinePatternBrush = new fabric.PatternBrush(this.canvas);
+      // hLinePatternBrush.getPatternSrc = (function(fabric) {
+      //   return function() {
+      //     var patternCanvas = fabric.document.createElement("canvas");
+      //     patternCanvas.width = patternCanvas.height = 10;
+      //     var ctx = patternCanvas.getContext("2d");
+      //     ctx.strokeStyle = "green";
+      //     ctx.lineWidth = 40;
+      //     ctx.beginPath();
+      //     ctx.moveTo(5, 0);
+      //     ctx.lineTo(5, 10);
+      //     ctx.closePath();
+      //     ctx.stroke();
+      //     return patternCanvas;
+      //   };
+      // })(fabric);
 
-      this.canvas.freeDrawingBrush = hLinePatternBrush;
-      this.canvas.freeDrawingBrush.width = 5;
+      // this.canvas.freeDrawingBrush = hLinePatternBrush;
+      // this.canvas.freeDrawingBrush.width = 5;
+
+      this.canvas.freeDrawingBrush.color = this.color;
+      this.canvas.freeDrawingBrush.width = this.pencilSize;
     }
   },
   watch: {
@@ -76,10 +109,15 @@ export default {
       //   this.canvas.off("mouse:move");
       // }
       if (newMode === "pencil") {
+        this.pencil = icons.activePencil;
         this.canvas.off("mouse:down");
         this.canvas.off("mouse:up");
         this.canvas.off("mouse:move");
         this.canvas.isDrawingMode = true;
+        this.isShow = true;
+        // let brush = this.canvas.freeDrawingBrush;
+        // brush.color = this.color;
+        // brush.width = this.config.pencilSize;
         this.freeDraw();
         // this.canvas.on("mouse:down", this.handleDown);
         // this.canvas.on("mouse:move", this.handleMove);
@@ -88,7 +126,15 @@ export default {
 
       if (newMode !== "pencil") {
         this.canvas.isDrawingMode = false;
+        this.pencil = icons.pencil;
+        this.isShow = false;
       }
+    },
+    pencilSize(val) {
+      this.canvas.freeDrawingBrush.width = val;
+    },
+    color(val) {
+      this.canvas.freeDrawingBrush.color = val;
     }
   }
 };
@@ -209,3 +255,38 @@ export default {
 //     this.canvas.add(path);
 //   },
 </script>
+
+<style lang="less" scoped>
+.menu_pencil {
+  position: relative;
+  background: orange;
+  .pencil_box {
+    position: absolute;
+    top: 30px;
+    display: flex;
+    left: 50%;
+    transform: translate(-50%, 0);
+    padding: 8px 6px;
+    background: #383c36;
+    align-items: center;
+    &::after {
+      content: "";
+      position: absolute;
+      padding: 0;
+      width: 0;
+      height: 0;
+      border-right: 10px solid transparent;
+      border-left: 10px solid transparent;
+      border-bottom: 10px solid #383c36;
+      top: -10px;
+      left: 50%;
+      transform: translate(-50%, 0);
+    }
+    .pencil_item {
+      margin: 0 3px;
+      background: #f2f2ee;
+      border-radius: 50%;
+    }
+  }
+}
+</style>
