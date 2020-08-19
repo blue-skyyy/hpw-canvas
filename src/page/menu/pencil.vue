@@ -13,6 +13,7 @@
   </div>
 </template>
 <script>
+import { fabric } from "fabric";
 // import { fabric } from "fabric";
 // import Pressure from "pressure";
 
@@ -95,9 +96,14 @@ export default {
 
       // this.canvas.freeDrawingBrush = hLinePatternBrush;
       // this.canvas.freeDrawingBrush.width = 5;
-
-      this.canvas.freeDrawingBrush.color = this.color;
-      this.canvas.freeDrawingBrush.width = this.pencilSize;
+      let cxt = this.canvas.getContext("2d");
+      cxt.globalCompositeOperation = "source-over";
+      // fabric.Path.globalCompositeOperation = "source-over";
+      this.canvas.freeDrawingBrush = null;
+      let pencilBrush = new fabric.PencilBrush(this.canvas);
+      pencilBrush.color = this.color;
+      pencilBrush.width = this.pencilSize;
+      this.canvas.freeDrawingBrush = pencilBrush;
     }
   },
   watch: {

@@ -15,6 +15,13 @@
         ref="pencil"
         class="menu_item"
       />
+
+      <menu-eraser
+        :canvas="canvas"
+        :mode="mode"
+        @click="switchMode('eraser')"
+        class="menu_item"
+      />
       <menu-color
         @click="switchMode('color')"
         class="menu_item"
@@ -54,17 +61,11 @@ import MenuZoom from "./menu/zoom.vue";
 import MenuRestore from "./menu/restore.vue";
 import MenuRotate from "./menu/rotate.vue";
 import MenuColor from "./menu/color.vue";
+import MenuEraser from "./menu/eraser.vue";
 const methods = {
   changeConfig(prop, value) {
     this.myConfig[prop] = value;
-    console.log(" this.myConfig----change", this.myConfig);
-  },
-  mouseWheel() {
-    var zoom = (event.deltaY > 0 ? -0.1 : 0.1) + this.canvas.getZoom();
-    zoom = Math.max(0.1, zoom); //最小为原来的1/10
-    zoom = Math.min(3, zoom); //最大是原来的3倍
-    var zoomPoint = new fabric.Point(event.pageX, event.pageY);
-    this.canvas.zoomToPoint(zoomPoint, zoom);
+    // console.log(" this.myConfig----change", this.myConfig);
   },
   freeDraw(canvas = this.canvas) {
     this.canvas.isDrawingMode = true;
@@ -89,12 +90,14 @@ const methods = {
     // canvas.freeDrawingBrush.width = 20;
   },
   switchMode(mode) {
-    // console.log("mode", mode);
-    if (this.mode === mode) {
-      this.mode = "";
-      return;
-    }
+    console.log("mode", mode);
+    // if (this.mode === mode) {
+    //   this.mode = "";
+    //   return;
+    // }
     this.mode = mode;
+
+    console.log("this.mode", this.mode);
   },
   test() {
     this.freeDraw(this.canvas);
@@ -138,10 +141,33 @@ const methods = {
     this.canvas.on("object:removed", this.dealRemove);
 
     // this.canvas.on("mouse:wheel", this.mouseWheel);
-    // this.canvas.on("path:created", this.dealCreated);
+    this.canvas.on("path:created", this.dealCreated);
   },
   dealCreated() {
-    // console.log("e", e);
+    if (this.mode === "eraser") {
+      // let objs = this.canvas.getObjects();
+      // console.log("objs", objs);
+      // let paths = [];
+      // for (let i = 0; i < objs.length; i++) {
+      //   if (objs[i].get("type") === "path" && objs[i].modeType === "eraser") {
+      //     // path类型
+      //     paths.push(objs[i]);
+      //   }
+      // }
+    }
+
+    if (this.mode === "pencil") {
+      // cxt.globalCompositeOperation = "source-over";
+      // e.path.set({
+      //   globalCompositeOperation: "source-over"
+      // });
+      // e.path.globalCompositeOperation = "source-over";
+      // e.path.selectable = false;
+      // e.path.evented = false;
+      // e.path.absolutePositioned = true;
+    }
+
+    // this.canvas.renderAll();
   },
   toNext() {
     this.currIndex += 1;
@@ -149,18 +175,19 @@ const methods = {
   },
   dealAdd(e) {
     console.log("----dealAdd----", e);
-    if (this.historyChanging) return;
-    if (e.target.isBg) return;
-    if (!e.target.isContainedWithinObject(this.currItem.bgImg)) {
-      // e.target.set({
-      //   hasBorders: false,
-      //   hasControls: false,
-      //   selectable: false
-      // });
-      // this.canvas.remove(e.target);
-      // setTimeout(() => alert("请在图片范围内操作"), 500);
-      return;
-    }
+    // if (this.historyChanging) return;
+    // if (e.target.isBg) return;
+    // if (!e.target.isContainedWithinObject(this.currItem.bgImg)) {
+    // e.target.set({
+    //   hasBorders: false,
+    //   hasControls: false,
+    //   selectable: false
+    // });
+    // this.canvas.remove(e.target);
+    // setTimeout(() => alert("请在图片范围内操作"), 500);
+    //   return;
+    // }
+
     // this.save();
   },
   dealModify() {
@@ -184,11 +211,9 @@ const methods = {
       let scaleX = Number(
         (imageInfo.scale.width / imageInfo.origin.width).toFixed(2)
       );
-
       let scaleY = Number(
         (imageInfo.scale.height / imageInfo.origin.height).toFixed(2)
       );
-
       bgImg.setSrc(this.itemList[index].url, () => {
         bgImg.hasBorders = false;
         bgImg.hasControls = false;
@@ -197,6 +222,8 @@ const methods = {
         bgImg.scaleX = scaleX;
         bgImg.translateX = "center";
         bgImg.translateY = "center";
+        bgImg.globalCompositeOperation = "destination-over";
+        bgImg.crossOrigin = "Anonymous";
         bgImg.left = 0;
         bgImg.top = 0;
         bgImg.zIndex = 1;
@@ -326,7 +353,8 @@ export default {
     MenuZoom,
     MenuRestore,
     MenuRotate,
-    MenuColor
+    MenuColor,
+    MenuEraser
   }
 };
 </script>
