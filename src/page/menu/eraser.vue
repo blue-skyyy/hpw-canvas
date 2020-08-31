@@ -1,13 +1,16 @@
 <template>
   <div>
-    <button @click="getPath">获取当前所有path路径</button>
-
-    <button @click="dealClick">改变模式</button>
+    <div class="menu_eraser">
+      <div @click="dealClick" v-html="eraserIcon" class="eraser_icon"></div>
+      <div class="color_box" v-show="isShow">
+        dd
+      </div>
+    </div>
   </div>
 </template>
 
 <script>
-// import { fabric } from "fabric";
+import icons from "../icons.js";
 
 export default {
   name: "eraser",
@@ -22,12 +25,58 @@ export default {
     }
   },
   data() {
-    return {};
+    return {
+      eraserIcon: icons.eraser,
+      isShow: false,
+      hoverObj: null
+    };
+  },
+
+  watch: {
+    mode(newmode) {
+      if (newmode === "eraser") {
+        this.eraserIcon = icons.activeEraser;
+      } else {
+        this.eraserIcon = icons.eraser;
+      }
+    },
+    canvas(newCanvas) {
+      newCanvas.on("mouse:down", this.dealMousedown);
+      newCanvas.on("object:over", this.dealMouseover);
+    }
   },
   methods: {
-    getPath() {},
-    // this.canvas.isDrawingMode = true;
+    dealMousedown(e) {
+      // 橡皮模式，移除选中的元素
+      if (this.mode === "eraser" && e.target === this.hoverObj) {
+        this.canvas.remove(this.hoverObj);
+        this.hoverObj = null;
+      }
+    },
+    dealMouseover(e) {
+      // 判断是否是橡皮模式
+      if (this.mode !== "eraser") return;
 
+      let target = e.target;
+      // 取消之前hoverObj的hover效果
+      if (this.hoverObj) {
+        this.hoverObj.stroke = this.hoverObj.origStroke;
+        this.canvas.renderAll();
+      }
+
+      // hover对象为笔划
+      if (target.get("type") === "path") {
+        target.origStroke = target.stroke;
+        // 高亮待删除的笔划
+        target.stroke = "#999";
+        this.hoverObj = target;
+        this.canvas.renderAll();
+      }
+    },
+    dealClick() {
+      this.$emit("click");
+    }
+    // this.canvas.isDrawingMode = true;
     // const EraserBrush = fabric.util.createClass(fabric.PencilBrush, {
     //   _finalizeAndAddPath() {
     //     console.log("EraserBrush");
@@ -61,18 +110,6 @@ export default {
     //       // stroke: "green",
     //       // strokeWidth: 20
     //     });
-
-    dealClick() {
-      this.$emit("click");
-    }
-  },
-  watch: {
-    // mode(newMode) {
-    //   console.log("newMode", newMode);
-    //   if (newMode === "pencil") {
-    //     console.log("i");
-    //   }
-    // }
   }
 };
 </script>

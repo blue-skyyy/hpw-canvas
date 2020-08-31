@@ -5,12 +5,12 @@
 ### 项目依赖库
 
 [fabric](http://fabricjs.com/)
-[konva](https://konvajs.org/docs/sandbox/Free_Drawing.html)
+[konvajs](https://github.com/konvajs/konva)
 
 ### 问题
 
 - 图片作为背景添加时候，反序列化加载 canvas 会闪烁
-- 橡皮擦功能不能像原生一样实现
+- 橡皮擦功能不能像原生一样实现(konva 可以实现)
 
 ### Project setup
 

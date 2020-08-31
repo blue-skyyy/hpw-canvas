@@ -1,12 +1,13 @@
 <template>
   <div class="menu_pencil">
-    <div @click="dealClick" v-html="pencil" class="pencil_icon"></div>
+    <div v-html="pencil" class="pencil_icon" @click.stop="dealClick"></div>
     <div class="pencil_box" v-show="isShow">
       <div
         class="pencil_item"
         v-for="(d, index) in pencilSizeList"
         @click.stop="changePencilSize(d)"
         :key="index"
+        :class="{ active: d === pencilSize }"
         :style="setStyle(index)"
       ></div>
     </div>
@@ -66,12 +67,18 @@ export default {
     }
   },
   methods: {
+    unShow() {
+      this.isShow = false;
+    },
     changePencilSize(size) {
-      console.log("size", size);
       this.$emit("changeConfig", "pencilSize", size);
       this.isShow = false;
     },
     dealClick() {
+      // console.log("yes");
+      this.isShow = true;
+      // this.pencil = icons.activePencil;
+
       this.$emit("click");
     },
 
@@ -101,6 +108,8 @@ export default {
       // fabric.Path.globalCompositeOperation = "source-over";
       this.canvas.freeDrawingBrush = null;
       let pencilBrush = new fabric.PencilBrush(this.canvas);
+
+      console.log("color", this.color, "width", this.pencilSize);
       pencilBrush.color = this.color;
       pencilBrush.width = this.pencilSize;
       this.canvas.freeDrawingBrush = pencilBrush;
@@ -115,22 +124,21 @@ export default {
       //   this.canvas.off("mouse:move");
       // }
       if (newMode === "pencil") {
+        // console.log("A");
         this.pencil = icons.activePencil;
-        this.canvas.off("mouse:down");
-        this.canvas.off("mouse:up");
-        this.canvas.off("mouse:move");
         this.canvas.isDrawingMode = true;
-        this.isShow = true;
-        // let brush = this.canvas.freeDrawingBrush;
-        // brush.color = this.color;
-        // brush.width = this.config.pencilSize;
-        this.freeDraw();
+        // this.isShow = true;
+        let brush = this.canvas.freeDrawingBrush;
+        brush.color = this.color;
+        brush.width = this.pencilSize;
+        // this.freeDraw();
         // this.canvas.on("mouse:down", this.handleDown);
         // this.canvas.on("mouse:move", this.handleMove);
         // this.canvas.on("mouse:up", this.handleUp);
       }
 
       if (newMode !== "pencil") {
+        // console.log("B");
         this.canvas.isDrawingMode = false;
         this.pencil = icons.pencil;
         this.isShow = false;
@@ -292,6 +300,9 @@ export default {
       margin: 0 3px;
       background: #f2f2ee;
       border-radius: 50%;
+    }
+    .active {
+      background: #999;
     }
   }
 }

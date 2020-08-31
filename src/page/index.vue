@@ -4,6 +4,13 @@
       <canvas id="image_canvas" ref="image_canvas"></canvas>
     </div>
     <div id="menu">
+      <menu-switch-image
+        @prevFunc="prev"
+        @nextFunc="next"
+        :prev="myConfig && myConfig.prev"
+        :next="myConfig && myConfig.next"
+      >
+      </menu-switch-image>
       <menu-pencil
         :mode="mode"
         :canvas="canvas"
@@ -23,13 +30,28 @@
         class="menu_item"
       />
       <menu-color
-        @click="switchMode('color')"
+        @click="switchMode"
         class="menu_item"
         :colorList="myConfig && myConfig.colorList"
         :mode="mode"
         @changeConfig="changeConfig"
       >
       </menu-color>
+
+      <menu-rotate
+        class="menu_item"
+        :canvas="canvas"
+        :currItem="currItem"
+        :rotateRight="myConfig && myConfig.rotateRight"
+        :rotateLeft="myConfig && myConfig.rotateLeft"
+      />
+
+      <menu-zoom
+        class="menu_item"
+        :canvas="canvas"
+        :zoomIn="myConfig && myConfig.zoomIn"
+        :zoomOut="myConfig && myConfig.zoomOut"
+      />
     </div>
     <button @click="addrect">添加对象</button>
     <button @click="delreact">删除对象</button>
@@ -40,14 +62,11 @@
     <button @click="test">测试</button>
     <menu-drag :mode="mode" :canvas="canvas" @click="switchMode('drag')" />
 
-    <menu-zoom zoomStatus="zoom_out" :canvas="canvas" />
-    <menu-zoom zoomStatus="zoom_in" :canvas="canvas" />
     <menu-restore
       :canvas="canvas"
       :bg="currItem && currItem.bgImg"
       :currItem="currItem"
     ></menu-restore>
-    <menu-rotate :canvas="canvas" :currItem="currItem"> </menu-rotate>
   </div>
 </template>
 
@@ -62,7 +81,17 @@ import MenuRestore from "./menu/restore.vue";
 import MenuRotate from "./menu/rotate.vue";
 import MenuColor from "./menu/color.vue";
 import MenuEraser from "./menu/eraser.vue";
+import MenuSwitchImage from "./menu/switchImage.vue";
 const methods = {
+  initEvents() {
+    // 点击菜单外区域将弹出层清除
+    document.addEventListener("click", (e) => {
+      let menu = document.querySelector("#menu");
+      if (!e.target.id === "menu" || !menu.contains(e.target)) {
+        this.$refs.pencil.unShow();
+      }
+    });
+  },
   changeConfig(prop, value) {
     this.myConfig[prop] = value;
     // console.log(" this.myConfig----change", this.myConfig);
@@ -90,7 +119,6 @@ const methods = {
     // canvas.freeDrawingBrush.width = 20;
   },
   switchMode(mode) {
-    console.log("mode", mode);
     // if (this.mode === mode) {
     //   this.mode = "";
     //   return;
@@ -173,8 +201,8 @@ const methods = {
     this.currIndex += 1;
     this.switchImage(this.currIndex);
   },
-  dealAdd(e) {
-    console.log("----dealAdd----", e);
+  dealAdd() {
+    // console.log("----dealAdd----", e);
     // if (this.historyChanging) return;
     // if (e.target.isBg) return;
     // if (!e.target.isContainedWithinObject(this.currItem.bgImg)) {
@@ -187,7 +215,6 @@ const methods = {
     // setTimeout(() => alert("请在图片范围内操作"), 500);
     //   return;
     // }
-
     // this.save();
   },
   dealModify() {
@@ -287,9 +314,31 @@ const methods = {
 };
 export default {
   mounted() {
+    // 静用缓存 该属性会对line hover事件产生影响 高亮不生效
+    fabric.Object.prototype.objectCaching = false;
     let canvas = new fabric.Canvas("image_canvas", {
       // isDrawingMode: true
     });
+
+    // 实现mouseover事件
+    canvas.findTarget = (function(originalFn) {
+      return function() {
+        let target = originalFn.apply(this, arguments);
+        if (target) {
+          if (this._hoveredTarget !== target) {
+            canvas.fire("object:over", { target: target });
+            if (this._hoveredTarget) {
+              canvas.fire("object:out", { target: this._hoveredTarget });
+            }
+            this._hoveredTarget = target;
+          }
+        } else if (this._hoveredTarget) {
+          canvas.fire("object:out", { target: this._hoveredTarget });
+          this._hoveredTarget = null;
+        }
+        return target;
+      };
+    })(canvas.findTarget);
     // var f = fabric;
     // canvas.freeDrawingBrush = new fabric.SprayBrush(canvas);
 
@@ -306,6 +355,7 @@ export default {
 
     this.initCanvas();
 
+    this.initEvents();
     // this.freeDraw(canvas);
 
     this.itemList = this.itemList.map((d) => {
@@ -329,7 +379,11 @@ export default {
       colorList: ["red", "green", "blue", "pink"],
       color: "red",
       pencilSizeList: [10, 15, 20, 40],
-      pencilSize: 10
+      pencilSize: 15,
+      rotateLeft: true,
+      rotateRight: true,
+      zoomIn: true,
+      zoomOut: true
     };
     return {
       canvas: null,
@@ -354,7 +408,8 @@ export default {
     MenuRestore,
     MenuRotate,
     MenuColor,
-    MenuEraser
+    MenuEraser,
+    MenuSwitchImage
   }
 };
 </script>
@@ -364,11 +419,12 @@ export default {
   overflow: hidden;
 }
 #image_canvas_wrap {
-  box-sizing: border-box;
+  // box-sizing: border-box;
+  box-sizing: content-box;
   width: 800px;
   height: 600px;
   margin: 0 auto;
-  border: 1px solid green;
+  // border: 1px solid green;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -378,6 +434,7 @@ export default {
     width: 100%;
     border: 1px solid red;
     position: absolute;
+    box-sizing: border-box;
   }
 }
 #menu {

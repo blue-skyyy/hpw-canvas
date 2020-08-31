@@ -1,6 +1,6 @@
 <template>
   <div class="menu_color">
-    <div @click="dealClick" v-html="colorIcon" class="color_icon"></div>
+    <div @click.stop="dealClick" v-html="colorIcon" class="color_icon"></div>
     <div class="color_box" v-show="isShow">
       <div
         class="color_item"
@@ -46,11 +46,12 @@ export default {
   },
   methods: {
     dealClick() {
-      this.$emit("click");
+      this.$emit("click", "color");
     },
     changeColor(color) {
       this.$emit("changeConfig", "color", color);
       this.isShow = false;
+      this.$emit("click", "pencil");
     }
   },
   watch: {

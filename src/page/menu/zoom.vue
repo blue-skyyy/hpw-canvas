@@ -1,22 +1,21 @@
 <template>
-  <div>
-    <button
-      v-if="zoomStatus && zoomStatus === 'zoom_out'"
+  <div class="menu_zoom">
+    <div
       @click="setZoom('out')"
+      style="marginLeft:8px;"
+      :style="!zoomOut && 'display:none'"
     >
-      放大
-    </button>
-    <button
-      v-if="zoomStatus && zoomStatus === 'zoom_in'"
-      @click="setZoom('in')"
-    >
-      缩小
-    </button>
+      <div class="icon" v-html="icons.zoomOut"></div>
+    </div>
+    <div :style="!zoomIn && 'display:none'" @click="setZoom('in')">
+      <div class="icon" v-html="icons.zoomIn"></div>
+    </div>
   </div>
 </template>
 
 <script>
 import { fabric } from "fabric";
+import icons from "../icons.js";
 export default {
   props: {
     zoomStatus: {
@@ -26,11 +25,20 @@ export default {
     canvas: {
       default: () => {},
       type: Object
+    },
+    zoomIn: {
+      type: Boolean,
+      default: false
+    },
+    zoomOut: {
+      type: Boolean,
+      default: false
     }
   },
   data() {
     return {
-      zoomStep: 0.1
+      zoomStep: 0.1,
+      icons
     };
   },
   methods: {
@@ -56,4 +64,9 @@ export default {
 };
 </script>
 
-<style lang="less"></style>
+<style lang="less" scoped>
+.menu_zoom {
+  display: flex;
+  background: green;
+}
+</style>
