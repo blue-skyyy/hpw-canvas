@@ -3,11 +3,7 @@
     <div :style="!rotateLeft && 'display:none'" @click="rotateTo('left')">
       <div class="icon" v-html="icons.rotateLeft"></div>
     </div>
-    <div
-      @click="rotateTo('right')"
-      style="marginLeft:8px;"
-      :style="!rotateRight && 'display:none'"
-    >
+    <div @click="rotateTo('right')" :style="!rotateRight && 'display:none'">
       <div class="icon" v-html="icons.rotateRight"></div>
     </div>
   </div>
@@ -43,13 +39,12 @@ export default {
   computed: {
     setStyle() {
       return function(left, right) {
-        console.log("left", left, right);
-        // if (left && right) {
-        //   return {
-        //     display: "flex",
-        //     flex: 1
-        //   };
-        // }
+        if (left && right) {
+          return {
+            display: "flex",
+            flex: 2
+          };
+        }
         if (!left && !right) {
           return {
             display: "none"
@@ -95,6 +90,6 @@ export default {
 
 <style lang="less" scoped>
 .menu_rotate {
-  background: red;
+  justify-content: space-around;
 }
 </style>

@@ -1,13 +1,9 @@
 <template>
-  <div class="menu_switch_image">
-    <div
-      @click="switchImage('prev')"
-      style="marginLeft:8px;"
-      :style="!prev && 'display:none'"
-    >
+  <div class="menu_switch_image" :style="setStyle(prev, next)">
+    <div @click.stop="switchImage('prev')" :style="!prev && 'display:none'">
       <div class="icon" v-html="icons.prev"></div>
     </div>
-    <div :style="!next && 'display:none'" @click="switchImage('next')">
+    <div :style="!next && 'display:none'" @click.stop="switchImage('next')">
       <div class="icon" v-html="icons.next"></div>
     </div>
   </div>
@@ -41,8 +37,35 @@ export default {
         this.$emit("nextFunc");
       }
     }
+  },
+  computed: {
+    setStyle() {
+      return function(prev, next) {
+        if (prev && next) {
+          return {
+            display: "flex",
+            flex: 2
+          };
+        }
+        if (!prev && !next) {
+          return {
+            display: "none"
+          };
+        }
+
+        return {
+          display: "flex",
+          flex: 1
+        };
+      };
+    }
   }
 };
 </script>
 
-<style lang="less" scoped></style>
+<style lang="less" scoped>
+.menu_switch_image {
+  display: flex;
+  justify-content: space-around;
+}
+</style>

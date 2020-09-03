@@ -273,7 +273,6 @@ export default {
 <style lang="less" scoped>
 .menu_pencil {
   position: relative;
-  background: orange;
   .pencil_box {
     position: absolute;
     top: 30px;

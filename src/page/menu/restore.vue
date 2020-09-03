@@ -1,12 +1,19 @@
 <template>
-  <div>
-    <button @click="restore">恢复</button>
+  <div class="menu_restore">
+    <div @click="dealClick" v-html="restoreIcon"></div>
   </div>
 </template>
 
 <script>
 import { fabric } from "fabric";
+import icons from "../icons.js";
+
 export default {
+  data() {
+    return {
+      restoreIcon: icons.restore
+    };
+  },
   props: {
     canvas: {
       type: Object,
@@ -22,7 +29,7 @@ export default {
     }
   },
   methods: {
-    restore() {
+    dealClick() {
       this.canvas.discardActiveObject();
 
       const { imageInfo, rotate } = this.currItem;

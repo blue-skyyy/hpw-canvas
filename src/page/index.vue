@@ -9,8 +9,23 @@
         @nextFunc="next"
         :prev="myConfig && myConfig.prev"
         :next="myConfig && myConfig.next"
+        class="menu_item"
       >
       </menu-switch-image>
+
+      <menu-undo
+        :mode="mode"
+        :canvas="canvas"
+        @click="switchMode('undo')"
+        class="menu_item"
+      ></menu-undo>
+
+      <menu-drag
+        :mode="mode"
+        :canvas="canvas"
+        @click="switchMode('drag')"
+        class="menu_item"
+      />
       <menu-pencil
         :mode="mode"
         :canvas="canvas"
@@ -52,21 +67,23 @@
         :zoomIn="myConfig && myConfig.zoomIn"
         :zoomOut="myConfig && myConfig.zoomOut"
       />
+
+      <menu-restore
+        :canvas="canvas"
+        :bg="currItem && currItem.bgImg"
+        :currItem="currItem"
+        class="menu_item"
+      ></menu-restore>
+
+      <menu-download :canvas="canvas" class="menu_item"> </menu-download>
     </div>
-    <button @click="addrect">添加对象</button>
+    <!-- <button @click="addrect">添加对象</button>
     <button @click="delreact">删除对象</button>
     <button @click="prev">上一张</button>
     <button @click="next">下一张</button>
     <button @click="saveCurrState">保存</button>
     <button @click="undo">上一步</button>
-    <button @click="test">测试</button>
-    <menu-drag :mode="mode" :canvas="canvas" @click="switchMode('drag')" />
-
-    <menu-restore
-      :canvas="canvas"
-      :bg="currItem && currItem.bgImg"
-      :currItem="currItem"
-    ></menu-restore>
+    <button @click="test">测试</button> -->
   </div>
 </template>
 
@@ -82,6 +99,8 @@ import MenuRotate from "./menu/rotate.vue";
 import MenuColor from "./menu/color.vue";
 import MenuEraser from "./menu/eraser.vue";
 import MenuSwitchImage from "./menu/switchImage.vue";
+import MenuDownload from "./menu/download.vue";
+import MenuUndo from "./menu/undo.vue";
 const methods = {
   initEvents() {
     // 点击菜单外区域将弹出层清除
@@ -256,7 +275,10 @@ const methods = {
         bgImg.zIndex = 1;
         bgImg.isBg = true;
         this.clearBoard();
-        this.setCanvasWH(imageInfo.scale.width, imageInfo.scale.height);
+        this.setCanvasWH(
+          imageInfo.scale.width - 10,
+          imageInfo.scale.height - 10
+        );
         // 初次加载的Image，需要自动创建一条历史记录
         // this.save();
         bgImg.sendToBack();
@@ -383,7 +405,9 @@ export default {
       rotateLeft: true,
       rotateRight: true,
       zoomIn: true,
-      zoomOut: true
+      zoomOut: true,
+      prev: true,
+      next: true
     };
     return {
       canvas: null,
@@ -409,14 +433,16 @@ export default {
     MenuRotate,
     MenuColor,
     MenuEraser,
-    MenuSwitchImage
+    MenuSwitchImage,
+    MenuDownload,
+    MenuUndo
   }
 };
 </script>
 
 <style lang="less" scoped>
 #container {
-  overflow: hidden;
+  // overflow: hidden;
 }
 #image_canvas_wrap {
   // box-sizing: border-box;
@@ -424,28 +450,60 @@ export default {
   width: 800px;
   height: 600px;
   margin: 0 auto;
-  // border: 1px solid green;
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: scroll;
+  background: #fff;
+  background-image: linear-gradient(
+      45deg,
+      #ccc 25%,
+      transparent 25%,
+      transparent 75%,
+      #ccc 75%,
+      #ccc
+    ),
+    linear-gradient(
+      45deg,
+      #ccc 25%,
+      transparent 25%,
+      transparent 75%,
+      #ccc 75%,
+      #ccc
+    );
+  background-size: 24px 24px;
+  background-position: 0 0, 12px 12px;
   #image_canvas {
     height: 100%;
     width: 100%;
-    border: 1px solid red;
-    position: absolute;
+    border: 3px solid #29323c;
     box-sizing: border-box;
   }
 }
 #menu {
   width: 800px;
   height: 50px;
-  border: 1px solid pink;
+  position: relative;
+  z-index: 1;
+
+  background: #485563; /* fallback for old browsers */
+  background: -webkit-linear-gradient(
+    to bottom,
+    #29323c,
+    #485563
+  ); /* Chrome 10-25, Safari 5.1-6 */
+  background: linear-gradient(
+    to bottom,
+    #29323c,
+    #485563
+  ); /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
+
   margin: 0 auto;
   display: flex;
   align-items: center;
   .menu_item {
     flex: 1;
+    position: relative;
   }
 }
 </style>

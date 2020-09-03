@@ -1,10 +1,6 @@
 <template>
-  <div class="menu_zoom">
-    <div
-      @click="setZoom('out')"
-      style="marginLeft:8px;"
-      :style="!zoomOut && 'display:none'"
-    >
+  <div class="menu_zoom" :style="setStyle(zoomIn, zoomOut)">
+    <div @click="setZoom('out')" :style="!zoomOut && 'display:none'">
       <div class="icon" v-html="icons.zoomOut"></div>
     </div>
     <div :style="!zoomIn && 'display:none'" @click="setZoom('in')">
@@ -60,6 +56,28 @@ export default {
         this.canvas.zoomToPoint(zoomPoint, zoom);
       }
     }
+  },
+  computed: {
+    setStyle() {
+      return function(zoomIn, zoomOut) {
+        if (zoomIn && zoomOut) {
+          return {
+            display: "flex",
+            flex: 2
+          };
+        }
+        if (!zoomIn && !zoomOut) {
+          return {
+            display: "none"
+          };
+        }
+
+        return {
+          display: "flex",
+          flex: 1
+        };
+      };
+    }
   }
 };
 </script>
@@ -67,6 +85,7 @@ export default {
 <style lang="less" scoped>
 .menu_zoom {
   display: flex;
-  background: green;
+  // background: red;
+  justify-content: space-around;
 }
 </style>

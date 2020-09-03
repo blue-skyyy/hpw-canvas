@@ -71,7 +71,6 @@ export default {
 <style lang="less" scoped>
 .menu_color {
   position: relative;
-  background: orange;
   .color_box {
     position: absolute;
     top: 30px;
@@ -80,7 +79,9 @@ export default {
     transform: translate(-50%, 0);
     padding: 5px 3px;
     background: #383c36;
+    z-index: 9999;
     &::after {
+      z-index: 999;
       content: "";
       position: absolute;
       padding: 0;

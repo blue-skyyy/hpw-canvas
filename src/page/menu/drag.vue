@@ -1,11 +1,14 @@
 <template>
-  <button @click="dealClick">
-    拖拽
-  </button>
+  <div>
+    <div class="menu_drag">
+      <div @click="dealClick" v-html="dragIcon" class="drag_icon"></div>
+    </div>
+  </div>
 </template>
 
 <script>
 import { fabric } from "fabric";
+import icons from "../icons.js";
 export default {
   props: {
     mode: {
@@ -18,7 +21,9 @@ export default {
     }
   },
   data() {
-    return {};
+    return {
+      dragIcon: icons.drag
+    };
   },
   methods: {
     dealClick() {
