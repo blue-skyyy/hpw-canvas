@@ -102,7 +102,7 @@ import MenuSwitchImage from "./menu/switchImage.vue";
 import MenuDownload from "./menu/download.vue";
 import MenuUndo from "./menu/undo.vue";
 const methods = {
-  initEvents() {
+  initDocumentEvents() {
     // 点击菜单外区域将弹出层清除
     document.addEventListener("click", (e) => {
       let menu = document.querySelector("#menu");
@@ -143,7 +143,7 @@ const methods = {
     //   return;
     // }
     this.mode = mode;
-
+    // if (this.mode === mode) return;
     console.log("this.mode", this.mode);
   },
   test() {
@@ -182,7 +182,7 @@ const methods = {
     this.canvas.setWidth(w);
     this.canvas.setHeight(h);
   },
-  initCanvas() {
+  initCanvasEvents() {
     this.canvas.on("object:added", this.dealAdd);
     this.canvas.on("object:modified", this.dealModify);
     this.canvas.on("object:removed", this.dealRemove);
@@ -220,20 +220,20 @@ const methods = {
     this.currIndex += 1;
     this.switchImage(this.currIndex);
   },
-  dealAdd() {
+  dealAdd(e) {
     // console.log("----dealAdd----", e);
-    // if (this.historyChanging) return;
-    // if (e.target.isBg) return;
-    // if (!e.target.isContainedWithinObject(this.currItem.bgImg)) {
-    // e.target.set({
-    //   hasBorders: false,
-    //   hasControls: false,
-    //   selectable: false
-    // });
-    // this.canvas.remove(e.target);
-    // setTimeout(() => alert("请在图片范围内操作"), 500);
-    //   return;
-    // }
+    if (this.historyChanging) return;
+    if (e.target.isBg) return;
+    if (!e.target.isContainedWithinObject(this.currItem.bgImg)) {
+      e.target.set({
+        hasBorders: false,
+        hasControls: false,
+        selectable: false
+      });
+      this.canvas.remove(e.target);
+      setTimeout(() => alert("请在图片范围内操作"), 500);
+      return;
+    }
     // this.save();
   },
   dealModify() {
@@ -264,27 +264,27 @@ const methods = {
         bgImg.hasBorders = false;
         bgImg.hasControls = false;
         bgImg.selectable = false;
-        bgImg.scaleY = scaleY;
         bgImg.scaleX = scaleX;
+        bgImg.scaleY = scaleY;
         bgImg.translateX = "center";
         bgImg.translateY = "center";
-        bgImg.globalCompositeOperation = "destination-over";
+        // bgImg.globalCompositeOperation = "destination-over";
         bgImg.crossOrigin = "Anonymous";
+        // bgImg.right = 0;
+        // bgImg.bottom = 0;
         bgImg.left = 0;
         bgImg.top = 0;
         bgImg.zIndex = 1;
         bgImg.isBg = true;
         this.clearBoard();
-        this.setCanvasWH(
-          imageInfo.scale.width - 10,
-          imageInfo.scale.height - 10
-        );
+        this.setCanvasWH(imageInfo.scale.width, imageInfo.scale.height);
         // 初次加载的Image，需要自动创建一条历史记录
         // this.save();
         bgImg.sendToBack();
         this.currItem.bgImg = bgImg;
 
         this.canvas.add(bgImg);
+        bgImg.center();
         this.canvas.renderAll();
         this.historyChanging = false;
         this.switching = false;
@@ -339,6 +339,7 @@ export default {
     // 静用缓存 该属性会对line hover事件产生影响 高亮不生效
     fabric.Object.prototype.objectCaching = false;
     let canvas = new fabric.Canvas("image_canvas", {
+      backgroundColor: "#fff"
       // isDrawingMode: true
     });
 
@@ -361,8 +362,6 @@ export default {
         return target;
       };
     })(canvas.findTarget);
-    // var f = fabric;
-    // canvas.freeDrawingBrush = new fabric.SprayBrush(canvas);
 
     let containerDOM;
     this.$nextTick(() => {
@@ -375,9 +374,9 @@ export default {
     });
     this.canvas = canvas;
 
-    this.initCanvas();
+    this.initCanvasEvents();
 
-    this.initEvents();
+    this.initDocumentEvents();
     // this.freeDraw(canvas);
 
     this.itemList = this.itemList.map((d) => {
@@ -400,8 +399,8 @@ export default {
     const defaultConfig = {
       colorList: ["red", "green", "blue", "pink"],
       color: "red",
-      pencilSizeList: [10, 15, 20, 40],
-      pencilSize: 15,
+      pencilSizeList: [1, 2, 3, 4],
+      pencilSize: 1,
       rotateLeft: true,
       rotateRight: true,
       zoomIn: true,
@@ -476,7 +475,7 @@ export default {
   #image_canvas {
     height: 100%;
     width: 100%;
-    border: 3px solid #29323c;
+    // border: 3px solid #29323c;
     box-sizing: border-box;
   }
 }

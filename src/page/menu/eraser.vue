@@ -2,9 +2,7 @@
   <div>
     <div class="menu_eraser">
       <div @click="dealClick" v-html="eraserIcon" class="eraser_icon"></div>
-      <div class="color_box" v-show="isShow">
-        dd
-      </div>
+      <div class="color_box" v-show="isShow"></div>
     </div>
   </div>
 </template>

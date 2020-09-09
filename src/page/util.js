@@ -35,8 +35,9 @@ const scaleWH = (imageW, imageH, maxWidth, maxHeight) => {
       }
     }
     return {
-      width: tempWidth,
-      height: tempHeight
+      // 让canvas有留白
+      width: Number((tempWidth - 10).toFixed(2)),
+      height: Number((tempHeight - 10).toFixed(2))
     };
   }
 };

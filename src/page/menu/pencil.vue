@@ -124,6 +124,7 @@ export default {
       //   this.canvas.off("mouse:move");
       // }
       if (newMode === "pencil") {
+        this.canvas.discardActiveObject();
         // console.log("A");
         this.pencil = icons.activePencil;
         this.canvas.isDrawingMode = true;

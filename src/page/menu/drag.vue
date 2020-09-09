@@ -27,23 +27,38 @@ export default {
   },
   methods: {
     dealClick() {
+      this.canvas.discardActiveObject();
       this.$emit("click");
+      let sel = new fabric.ActiveSelection(this.canvas.getObjects(), {
+        canvas: this.canvas
+      });
+      this.canvas.setActiveObject(sel);
+      this.canvas.renderAll();
     }
   },
   watch: {
-    mode(newMode) {
-      if (newMode === "drag") {
-        this.canvas.off("mouse:down");
-        this.canvas.off("mouse:up");
-        this.canvas.off("mouse:move");
-        var sel = new fabric.ActiveSelection(this.canvas.getObjects(), {
-          canvas: this.canvas
-        });
-        this.canvas.setActiveObject(sel);
-        this.canvas.requestRenderAll();
+    mode(newmode) {
+      if (newmode === "drag") {
+        this.dragIcon = icons.activeDrag;
+      } else {
+        this.dragIcon = icons.drag;
       }
     }
   }
+
+  // watch: {
+  //   mode(newMode) {
+  //     if (newMode === "drag" || this.mode === "drag") {
+  //       console.log("watch");
+  //       this.dealClick();
+  //       // let sel = new fabric.ActiveSelection(this.canvas.getObjects(), {
+  //       //   canvas: this.canvas
+  //       // });
+  //       // this.canvas.setActiveObject(sel);
+  //       // this.canvas.renderAll();
+  //     }
+  //   }
+  // }
 };
 </script>
 

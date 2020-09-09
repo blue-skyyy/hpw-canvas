@@ -32,6 +32,16 @@ export default {
     dealClick() {
       this.canvas.discardActiveObject();
 
+      this.canvas.getObjects().forEach((child) => {
+        if (!child.isBg) this.canvas.remove(child);
+      });
+
+      // 背景图片恢复
+      this.bg.scaleX = 1;
+      this.bg.scaleY = 1;
+      this.bg.rotate(0);
+      this.bg.center();
+
       const { imageInfo, rotate } = this.currItem;
 
       this.canvas.setWidth(imageInfo.scale.width);
@@ -40,15 +50,17 @@ export default {
       let sel = new fabric.ActiveSelection(this.canvas.getObjects(), {
         canvas: this.canvas,
         cornerSize: 0,
-        hasBorders: false,
-        selectable: false,
-        hasControls: false
+        hasBorders: true,
+        selectable: true,
+        hasControls: true
       });
       this.canvas.setActiveObject(sel);
 
       // 位置
       sel.left = 0;
       sel.top = 0;
+      sel.right = 0;
+      sel.bottom = 0;
 
       // 旋转
       sel.rotate(-rotate);
