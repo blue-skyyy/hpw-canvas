@@ -21,7 +21,6 @@ class Item {
     this.scaleWH = false;
     this.zoomMode = options.zoomMode || "showAll";
     this.canvas = options.canvas;
-    // 针对 correction-work 版本
     this.zoom = 1;
     this.conWH = options.conWH;
     this.bgImg = options.bgImg;

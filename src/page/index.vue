@@ -79,17 +79,17 @@
         <menu-download
           :canvas="canvas"
           class="menu_item"
-          crossorigin="anonymous"
+          @exportImage="exportImage"
         >
         </menu-download>
 
         <button @click="saveCurrItemState">点我保存状态</button>
 
-        <button @click="exportTest">点我导出</button>
+        <!-- <button @click="exportTest">点我导出</button> -->
       </div>
     </div>
 
-    <!-- <img :src="imgUrl" style="border: 1px solid blue" /> -->
+    <img :src="imgUrl" style="border: 1px solid blue" />
     <img :src="imgUrlExport" style="border: 1px solid green" />
   </div>
 </template>
@@ -109,96 +109,95 @@ import MenuSwitchImage from "./menu/switchImage.vue";
 import MenuDownload from "./menu/download.vue";
 import MenuUndo from "./menu/undo.vue";
 const methods = {
-  exportImageList() {},
-  exportTest() {
-    if (!this.currItem) return;
-    this.saveCurrItemState(); // 导出时候默认保存一次，避免状态遗漏
-    const {
-      rotate,
-      imageInfo: { scale },
-      scaleX,
-      scaleY
-    } = this.currItem;
-    let state = this.currItem.getCurrState();
-    // 导出canvas
-    let exportCanvas;
-    if (!exportCanvas) {
-      exportCanvas = document.createElement("canvas");
-      document.documentElement.append(exportCanvas);
-
-      exportCanvas.id = "export_canvas";
-      exportCanvas.style.border = "1px solid red";
+  // 调整快照状态
+  fixState(state, { scaleX, scaleY }) {
+    if (!state) {
+      console.error("state is required");
+      return;
     }
-
-    // 调整宽高
-    const width = rotate % 180 === 0 ? scale.width : scale.height;
-    const height = rotate % 180 === 0 ? scale.height : scale.width;
-
-    exportCanvas = new fabric.Canvas("export_canvas", {
-      width,
-      height
-    });
-
-    // let zoom = this.canvas.getZoom();
-    // console.log("zoom", zoom);
-
-    // 将state反序列化到exportCanvas
     let stateObj = JSON.parse(state);
-
-    console.log("stateObj", stateObj);
-    // 由于0.3333333 存储状态会保存为0.33 导出后比例有略微不同 手动保持一致
     stateObj.objects[0].scaleY = scaleY;
     stateObj.objects[0].scaleX = scaleX;
-    exportCanvas.loadFromJSON(JSON.stringify(stateObj), () => {
-      exportCanvas.discardActiveObject();
-
-      // 将图片位置摆正
-      let sel = new fabric.ActiveSelection(exportCanvas.getObjects(), {
-        canvas: exportCanvas,
-        cornerSize: 0,
-        hasControls: false
+    return JSON.stringify(stateObj);
+  },
+  // 导出图片的方法
+  exportImageFunc(item) {
+    return new Promise((reslove, reject) => {
+      if (!item) reject("item is required, item:", item);
+      // this.saveCurrItemState(); // 导出时候默认保存一次，避免状态遗漏
+      const {
+        rotate,
+        imageInfo: { scale },
+        scaleX,
+        scaleY
+      } = item;
+      // 导出canvas
+      let exportCanvas;
+      if (!exportCanvas) {
+        exportCanvas = document.createElement("canvas");
+        exportCanvas.id = "export_canvas";
+        exportCanvas.style.border = "1px solid red";
+      } else {
+        exportCanvas.getObjects().forEach((child) => {
+          exportCanvas.remove(child);
+        });
+      }
+      // 调整宽高
+      const width = rotate % 180 === 0 ? scale.width : scale.height;
+      const height = rotate % 180 === 0 ? scale.height : scale.width;
+      exportCanvas = new fabric.Canvas("export_canvas", {
+        width,
+        height
       });
 
-      exportCanvas.setActiveObject(sel);
+      let state = item.getCurrState();
+      // 由于0.3333333 存储状态会保存为0.33 导出后比例有略微不同 手动保持一致
+      let fixState = this.fixState(state, { scaleY, scaleX });
+      exportCanvas.loadFromJSON(fixState, () => {
+        exportCanvas.discardActiveObject();
+        let sel = new fabric.ActiveSelection(exportCanvas.getObjects(), {
+          canvas: exportCanvas,
+          cornerSize: 0,
+          hasControls: false
+        });
+        exportCanvas.setActiveObject(sel);
+        sel.translateX = "center";
+        sel.translateY = "center";
+        sel.left = 0;
+        sel.top = 0;
 
-      sel.translateX = "center";
-      sel.translateY = "center";
-      // sel.center();
+        let data = exportCanvas.toDataURL({
+          // origin.height / scale.height,
+          // multiplier: 3, // 恢复比例导出
+          format: "jpeg",
+          quality: 0.8 // 降质量
+        });
+        exportCanvas.renderAll();
+        this.imgUrlExport = data;
 
-      sel.left = 0;
-      sel.top = 0;
-
-      // console.log("scaleX", scaleX, Number(scaleX) + 1);
-      // sel.scaleX = 1 + scaleX;
-      // sel.scaleY = 1 + scaleY;
-      // sel.center();
-
-      // sel.right = 0;
-      // sel.bottom = 0;
-      // exportCanvas.setZoom(zoom);
-
-      // console.log(
-      //   "sacale",
-      //   scale,
-      //   "origin",
-      //   origin,
-      //   "origin.width / scale.width",
-      //   origin.width / scale.width,
-      //   " origin.height / scale.height",
-      //   origin.height / scale.height
-      // );
-
-      let data = exportCanvas.toDataURL({
-        // origin.height / scale.height,
-        // multiplier: 3, // 恢复比例导出
-        format: "jpeg",
-        quality: 0.8 // 降质量
+        reslove(data);
       });
-
-      exportCanvas.renderAll();
-
-      this.imgUrlExport = data;
     });
+  },
+  exportImage(type, index = this.currIndex) {
+    // 导出单张(默认当前)或所有
+    if (!this.currItem || !type) return;
+    this.saveCurrItemState(); // 导出时候默认保存当前item一次，避免状态遗漏
+    if (type === "single") {
+      // 单张
+      if (index < 0) return;
+      return this.exportImageFunc(this.itemList[index]);
+    }
+    if (type === "list") {
+      // 全部
+      return this.imageList.map((d, i) => {
+        if (d.rendered) {
+          return this.exportImageFunc(this.itemList[i]);
+        } else {
+          return new Promise((reslove) => reslove(d));
+        }
+      });
+    }
   },
   initDocumentEvents() {
     // 点击菜单外区域将弹出层清除
@@ -282,7 +281,6 @@ const methods = {
     this.switchImage(this.currIndex);
   },
   setCanvasWH(w, h) {
-    console.log("setCanvasWH", w, h);
     this.canvas.setWidth(w);
     this.canvas.setHeight(h);
   },
@@ -401,22 +399,26 @@ const methods = {
   },
   switchImage(index) {
     if (this.currIndex < 0) return;
-    let obj = this.itemList[index];
+    let obj = this.imageList[index];
     if (!obj) return;
     let itemObj;
     if (obj && !obj.rendered) {
+      console.log("首次渲染");
       // 首次渲染
       itemObj = new Item(
         {
-          url: this.itemList[index].url,
+          url: this.imageList[index].url,
           // canvas: this.canvas
           conWH: this.conWH
         },
         () => this.afterSwitch(index, itemObj, true)
       );
       this.currItem = itemObj;
+      this.itemList[this.currIndex] = itemObj;
+      this.imageList[this.currIndex].rendered = true;
     } else if (obj && obj.rendered) {
       // 非首次渲染
+      console.log("非首次渲染");
       let state = itemObj.getCurrState();
       this.canvas.loadFromJSON(state, () => {
         this.afterSwitch(index, itemObj, false);
@@ -431,22 +433,20 @@ const methods = {
     console.count("=======saveCurrItemState=======");
     // 保存当前每个实例状态
     if (!this.currItem) return;
-
     let imgData = this.canvas.toDataURL();
     this.canvas.renderAll();
-    console.log("saveCurrItemState", this.canvas);
-    this.currItem.save(imgData, this.canvas.toJSON(["width", "height"]));
-
+    this.currItem.save(
+      imgData,
+      this.canvas.toJSON(["width", "height", "zoom"])
+    );
     this.imgUrl = imgData;
-
-    // this.currItem.save("dt===", this.canvas.toJSON());
   },
   undo() {
     if (!this.currItem || this.historyChanging) return;
     let history = this.currItem.getPreHistory();
-    // let h = this.currItem.getPreHistory();
-    console.log("h", history);
-    this.canvas.loadFromJSON(history, () => {
+    const { scaleY, scaleX } = this.currItem;
+    let fixHistory = this.fixState(history, { scaleX, scaleY });
+    this.canvas.loadFromJSON(fixHistory, () => {
       this.historyChanging = false;
       this.canvas.renderAll();
     });
@@ -488,7 +488,7 @@ export default {
     this.initDocumentEvents();
     // this.freeDraw(canvas);
 
-    this.itemList = this.itemList.map((d) => {
+    this.imageList = this.imageList.map((d) => {
       return {
         url: d,
         rendered: false
@@ -529,7 +529,8 @@ export default {
       canvas: null,
       conWH: {},
       historyChanging: false,
-      itemList: imageList,
+      imageList: imageList,
+      itemList: [],
       currIndex: -1,
       currItem: null,
       panning: false,

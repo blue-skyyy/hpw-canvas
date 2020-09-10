@@ -4,7 +4,11 @@
       <div @click="dealClick" v-html="downloadIcon" class="eraser_icon"></div>
     </div>
 
-    <el-dialog title="请选择图片下载类型" :visible.sync="dialogVisible">
+    <el-dialog
+      title="请选择下载图片类型"
+      :visible.sync="dialogVisible"
+      :modal-append-to-body="false"
+    >
       <el-button type="warning" @click.stop="download('origin')"
         >下载原始图片</el-button
       >
@@ -62,11 +66,11 @@ export default {
       }
 
       if (type === "current") {
-        this.downloadOriginImg;
+        this.$emit("exportImage", "single");
+        this.dialogVisible = false;
       }
     },
     dealClick() {
-      this.$emit("click");
       this.dialogVisible = true;
     },
 
