@@ -1,89 +1,96 @@
 <template>
-  <div id="container">
-    <div id="image_canvas_wrap" ref="image_canvas_wrap">
-      <canvas id="image_canvas" ref="image_canvas"></canvas>
+  <div>
+    <div id="container">
+      <div id="image_canvas_wrap" ref="image_canvas_wrap">
+        <canvas id="image_canvas" ref="image_canvas"></canvas>
+      </div>
+      <div id="menu">
+        <menu-switch-image
+          @prevFunc="prev"
+          @nextFunc="next"
+          :prev="myConfig && myConfig.prev"
+          :next="myConfig && myConfig.next"
+          class="menu_item"
+        >
+        </menu-switch-image>
+
+        <menu-undo
+          :mode="mode"
+          :canvas="canvas"
+          @click="switchMode('undo')"
+          class="menu_item"
+        ></menu-undo>
+
+        <menu-drag
+          :mode="mode"
+          :canvas="canvas"
+          @click="switchMode('drag')"
+          class="menu_item"
+        />
+        <menu-pencil
+          :mode="mode"
+          :canvas="canvas"
+          @click="switchMode('pencil')"
+          :color="myConfig && myConfig.color"
+          :pencilSizeList="myConfig && myConfig.pencilSizeList"
+          :pencilSize="myConfig && myConfig.pencilSize"
+          @changeConfig="changeConfig"
+          ref="pencil"
+          class="menu_item"
+        />
+
+        <menu-eraser
+          :canvas="canvas"
+          :mode="mode"
+          @click="switchMode('eraser')"
+          class="menu_item"
+        />
+        <menu-color
+          @click="switchMode"
+          class="menu_item"
+          :colorList="myConfig && myConfig.colorList"
+          :mode="mode"
+          @changeConfig="changeConfig"
+        >
+        </menu-color>
+
+        <menu-rotate
+          class="menu_item"
+          :canvas="canvas"
+          :currItem="currItem"
+          :rotateRight="myConfig && myConfig.rotateRight"
+          :rotateLeft="myConfig && myConfig.rotateLeft"
+        />
+
+        <menu-zoom
+          class="menu_item"
+          :canvas="canvas"
+          :zoomIn="myConfig && myConfig.zoomIn"
+          :zoomOut="myConfig && myConfig.zoomOut"
+        />
+
+        <menu-restore
+          :canvas="canvas"
+          :bg="currItem && currItem.bgImg"
+          :currItem="currItem"
+          class="menu_item"
+        ></menu-restore>
+
+        <menu-download
+          :canvas="canvas"
+          class="menu_item"
+          crossorigin="anonymous"
+        >
+        </menu-download>
+
+        <button @click="saveCurrItemState">点我保存状态</button>
+
+        <button @click="exportTest">点我导出</button>
+      </div>
     </div>
-    <div id="menu">
-      <menu-switch-image
-        @prevFunc="prev"
-        @nextFunc="next"
-        :prev="myConfig && myConfig.prev"
-        :next="myConfig && myConfig.next"
-        class="menu_item"
-      >
-      </menu-switch-image>
 
-      <menu-undo
-        :mode="mode"
-        :canvas="canvas"
-        @click="switchMode('undo')"
-        class="menu_item"
-      ></menu-undo>
-
-      <menu-drag
-        :mode="mode"
-        :canvas="canvas"
-        @click="switchMode('drag')"
-        class="menu_item"
-      />
-      <menu-pencil
-        :mode="mode"
-        :canvas="canvas"
-        @click="switchMode('pencil')"
-        :color="myConfig && myConfig.color"
-        :pencilSizeList="myConfig && myConfig.pencilSizeList"
-        :pencilSize="myConfig && myConfig.pencilSize"
-        @changeConfig="changeConfig"
-        ref="pencil"
-        class="menu_item"
-      />
-
-      <menu-eraser
-        :canvas="canvas"
-        :mode="mode"
-        @click="switchMode('eraser')"
-        class="menu_item"
-      />
-      <menu-color
-        @click="switchMode"
-        class="menu_item"
-        :colorList="myConfig && myConfig.colorList"
-        :mode="mode"
-        @changeConfig="changeConfig"
-      >
-      </menu-color>
-
-      <menu-rotate
-        class="menu_item"
-        :canvas="canvas"
-        :currItem="currItem"
-        :rotateRight="myConfig && myConfig.rotateRight"
-        :rotateLeft="myConfig && myConfig.rotateLeft"
-      />
-
-      <menu-zoom
-        class="menu_item"
-        :canvas="canvas"
-        :zoomIn="myConfig && myConfig.zoomIn"
-        :zoomOut="myConfig && myConfig.zoomOut"
-      />
-
-      <menu-restore
-        :canvas="canvas"
-        :bg="currItem && currItem.bgImg"
-        :currItem="currItem"
-        class="menu_item"
-      ></menu-restore>
-
-      <menu-download :canvas="canvas" class="menu_item"> </menu-download>
-    </div>
-    <!-- <button @click="addrect">添加对象</button>
-    <button @click="delreact">删除对象</button>
-    <button @click="prev">上一张</button>
-    <button @click="next">下一张</button>
-    <button @click="saveCurrState">保存</button>
-    <button @click="undo">上一步</button>
-    <button @click="test">测试</button> -->
+    <!-- <img :src="imgUrl" style="border: 1px solid blue" /> -->
+    <img :src="imgUrlExport" style="border: 1px solid green" />
   </div>
 </template>
 
@@ -102,12 +109,104 @@ import MenuSwitchImage from "./menu/switchImage.vue";
 import MenuDownload from "./menu/download.vue";
 import MenuUndo from "./menu/undo.vue";
 const methods = {
+  exportImageList() {},
+  exportTest() {
+    if (!this.currItem) return;
+    this.saveCurrItemState(); // 导出时候默认保存一次，避免状态遗漏
+    const {
+      rotate,
+      imageInfo: { scale },
+      scaleX,
+      scaleY
+    } = this.currItem;
+    let state = this.currItem.getCurrState();
+    // 导出canvas
+    let exportCanvas;
+    if (!exportCanvas) {
+      exportCanvas = document.createElement("canvas");
+      document.documentElement.append(exportCanvas);
+
+      exportCanvas.id = "export_canvas";
+      exportCanvas.style.border = "1px solid red";
+    }
+
+    // 调整宽高
+    const width = rotate % 180 === 0 ? scale.width : scale.height;
+    const height = rotate % 180 === 0 ? scale.height : scale.width;
+
+    exportCanvas = new fabric.Canvas("export_canvas", {
+      width,
+      height
+    });
+
+    // let zoom = this.canvas.getZoom();
+    // console.log("zoom", zoom);
+
+    // 将state反序列化到exportCanvas
+    let stateObj = JSON.parse(state);
+
+    console.log("stateObj", stateObj);
+    // 由于0.3333333 存储状态会保存为0.33 导出后比例有略微不同 手动保持一致
+    stateObj.objects[0].scaleY = scaleY;
+    stateObj.objects[0].scaleX = scaleX;
+    exportCanvas.loadFromJSON(JSON.stringify(stateObj), () => {
+      exportCanvas.discardActiveObject();
+
+      // 将图片位置摆正
+      let sel = new fabric.ActiveSelection(exportCanvas.getObjects(), {
+        canvas: exportCanvas,
+        cornerSize: 0,
+        hasControls: false
+      });
+
+      exportCanvas.setActiveObject(sel);
+
+      sel.translateX = "center";
+      sel.translateY = "center";
+      // sel.center();
+
+      sel.left = 0;
+      sel.top = 0;
+
+      // console.log("scaleX", scaleX, Number(scaleX) + 1);
+      // sel.scaleX = 1 + scaleX;
+      // sel.scaleY = 1 + scaleY;
+      // sel.center();
+
+      // sel.right = 0;
+      // sel.bottom = 0;
+      // exportCanvas.setZoom(zoom);
+
+      // console.log(
+      //   "sacale",
+      //   scale,
+      //   "origin",
+      //   origin,
+      //   "origin.width / scale.width",
+      //   origin.width / scale.width,
+      //   " origin.height / scale.height",
+      //   origin.height / scale.height
+      // );
+
+      let data = exportCanvas.toDataURL({
+        // origin.height / scale.height,
+        // multiplier: 3, // 恢复比例导出
+        format: "jpeg",
+        quality: 0.8 // 降质量
+      });
+
+      exportCanvas.renderAll();
+
+      this.imgUrlExport = data;
+    });
+  },
   initDocumentEvents() {
     // 点击菜单外区域将弹出层清除
     document.addEventListener("click", (e) => {
       let menu = document.querySelector("#menu");
       if (!e.target.id === "menu" || !menu.contains(e.target)) {
-        this.$refs.pencil.unShow();
+        let pencil = this.$refs.pencil;
+        pencil && pencil.unShow();
       }
     });
   },
@@ -118,8 +217,8 @@ const methods = {
   freeDraw(canvas = this.canvas) {
     this.canvas.isDrawingMode = true;
     var hLinePatternBrush = new fabric.PatternBrush(canvas);
-    hLinePatternBrush.getPatternSrc = (function(fabric) {
-      return function() {
+    hLinePatternBrush.getPatternSrc = (function (fabric) {
+      return function () {
         var patternCanvas = fabric.document.createElement("canvas");
         patternCanvas.width = patternCanvas.height = 10;
         var ctx = patternCanvas.getContext("2d");
@@ -145,6 +244,10 @@ const methods = {
     this.mode = mode;
     // if (this.mode === mode) return;
     console.log("this.mode", this.mode);
+
+    if (mode === "undo") {
+      this.undo();
+    }
   },
   test() {
     this.freeDraw(this.canvas);
@@ -179,6 +282,7 @@ const methods = {
     this.switchImage(this.currIndex);
   },
   setCanvasWH(w, h) {
+    console.log("setCanvasWH", w, h);
     this.canvas.setWidth(w);
     this.canvas.setHeight(h);
   },
@@ -224,17 +328,16 @@ const methods = {
     // console.log("----dealAdd----", e);
     if (this.historyChanging) return;
     if (e.target.isBg) return;
-    if (!e.target.isContainedWithinObject(this.currItem.bgImg)) {
-      e.target.set({
-        hasBorders: false,
-        hasControls: false,
-        selectable: false
-      });
-      this.canvas.remove(e.target);
-      setTimeout(() => alert("请在图片范围内操作"), 500);
-      return;
-    }
-    // this.save();
+    // if (!e.target.isContainedWithinObject(this.currItem.bgImg)) {
+    //   e.target.set({
+    //     hasBorders: false,
+    //     hasControls: false,
+    //     selectable: false
+    //   });
+    //   this.canvas.remove(e.target);
+    //   setTimeout(() => alert("请在图片范围内操作"), 500);
+    //   return;
+    // }
   },
   dealModify() {
     if (this.historyChanging) return;
@@ -250,45 +353,48 @@ const methods = {
     });
   },
 
-  afterSwitch(index, itemObj, fisrtRender = false) {
-    const { imageInfo } = itemObj;
-    if (fisrtRender) {
+  afterSwitch(index, itemObj, firstRender = false) {
+    const { imageInfo, scaleX, scaleY } = itemObj;
+    if (firstRender) {
       let bgImg = new fabric.Image();
-      let scaleX = Number(
-        (imageInfo.scale.width / imageInfo.origin.width).toFixed(2)
-      );
-      let scaleY = Number(
-        (imageInfo.scale.height / imageInfo.origin.height).toFixed(2)
-      );
-      bgImg.setSrc(this.itemList[index].url, () => {
-        bgImg.hasBorders = false;
-        bgImg.hasControls = false;
-        bgImg.selectable = false;
-        bgImg.scaleX = scaleX;
-        bgImg.scaleY = scaleY;
-        bgImg.translateX = "center";
-        bgImg.translateY = "center";
-        // bgImg.globalCompositeOperation = "destination-over";
-        bgImg.crossOrigin = "Anonymous";
-        // bgImg.right = 0;
-        // bgImg.bottom = 0;
-        bgImg.left = 0;
-        bgImg.top = 0;
-        bgImg.zIndex = 1;
-        bgImg.isBg = true;
-        this.clearBoard();
-        this.setCanvasWH(imageInfo.scale.width, imageInfo.scale.height);
-        // 初次加载的Image，需要自动创建一条历史记录
-        // this.save();
-        bgImg.sendToBack();
-        this.currItem.bgImg = bgImg;
+      bgImg.setSrc(
+        this.itemList[index].url,
+        () => {
+          bgImg.hasBorders = false;
+          bgImg.hasControls = false;
+          bgImg.selectable = false;
+          bgImg.scaleable = false;
+          // 0.33333 会导致导出图片有留白  如果放大则会导致图片导出不全
+          bgImg.scaleX = scaleX;
+          bgImg.scaleY = scaleY;
+          bgImg.scaleToHeight(imageInfo.scale.height, false);
+          bgImg.scaleToWidth(imageInfo.scale.width, false);
+          bgImg.crossOrigin = "anonymous";
+          bgImg.translateX = "top";
+          bgImg.translateY = "left";
+          // bgImg.globalCompositeOperation = "destination-over";
+          bgImg.left = 0;
+          bgImg.top = 0;
+          bgImg.zIndex = 1;
+          bgImg.isBg = true;
+          // 动态添加scale比例
 
-        this.canvas.add(bgImg);
-        bgImg.center();
-        this.canvas.renderAll();
-        this.historyChanging = false;
-        this.switching = false;
-      });
+          this.clearBoard();
+          this.setCanvasWH(imageInfo.scale.width, imageInfo.scale.height);
+          // 初次加载的Image，需要自动创建一条历史记录
+          bgImg.sendToBack();
+          this.currItem.bgImg = bgImg;
+
+          this.canvas.add(bgImg);
+          this.saveCurrItemState();
+
+          this.canvas.renderAll();
+          this.historyChanging = false;
+          this.switching = false;
+        },
+        // 防止画布污染
+        { crossOrigin: "anonymous" }
+      );
     } else {
       // 非首次加载
     }
@@ -321,15 +427,27 @@ const methods = {
       });
     }
   },
-  saveCurrState() {
-    // 保存当前状态
+  saveCurrItemState() {
+    console.count("=======saveCurrItemState=======");
+    // 保存当前每个实例状态
     if (!this.currItem) return;
 
-    this.currItem.save("dt===", this.canvas.toJSON());
+    let imgData = this.canvas.toDataURL();
+    this.canvas.renderAll();
+    console.log("saveCurrItemState", this.canvas);
+    this.currItem.save(imgData, this.canvas.toJSON(["width", "height"]));
+
+    this.imgUrl = imgData;
+
+    // this.currItem.save("dt===", this.canvas.toJSON());
   },
   undo() {
-    let h = this.currItem.getPreHistory();
-    this.canvas.loadFromJSON(h, () => {
+    if (!this.currItem || this.historyChanging) return;
+    let history = this.currItem.getPreHistory();
+    // let h = this.currItem.getPreHistory();
+    console.log("h", history);
+    this.canvas.loadFromJSON(history, () => {
+      this.historyChanging = false;
       this.canvas.renderAll();
     });
   }
@@ -344,8 +462,8 @@ export default {
     });
 
     // 实现mouseover事件
-    canvas.findTarget = (function(originalFn) {
-      return function() {
+    canvas.findTarget = (function (originalFn) {
+      return function () {
         let target = originalFn.apply(this, arguments);
         if (target) {
           if (this._hoveredTarget !== target) {
@@ -363,15 +481,6 @@ export default {
       };
     })(canvas.findTarget);
 
-    let containerDOM;
-    this.$nextTick(() => {
-      containerDOM = this.$refs.image_canvas_wrap;
-      this.conWH = {
-        width: containerDOM.clientWidth,
-        height: containerDOM.clientHeight
-      };
-      // this.setCanvasWH(this.conWH.width, this.conWH.height);
-    });
     this.canvas = canvas;
 
     this.initCanvasEvents();
@@ -386,7 +495,15 @@ export default {
       };
     });
 
-    this.toNext();
+    let containerDOM;
+    this.$nextTick(() => {
+      containerDOM = this.$refs.image_canvas_wrap;
+      this.conWH = {
+        width: containerDOM.clientWidth,
+        height: containerDOM.clientHeight
+      };
+      this.toNext();
+    });
   },
   methods,
   props: {
@@ -418,7 +535,9 @@ export default {
       panning: false,
       mode: "",
       freeDrawingBrushWidth: 20,
-      myConfig: Object.assign({}, defaultConfig, this.config)
+      myConfig: Object.assign({}, defaultConfig, this.config),
+      imgUrl: null,
+      imgUrlExport: null
 
       // colors: {}
       // statusList: null,
@@ -475,8 +594,9 @@ export default {
   #image_canvas {
     height: 100%;
     width: 100%;
-    // border: 3px solid #29323c;
+    border: 1px solid red;
     box-sizing: border-box;
+    // border-left: 10px solid red;
   }
 }
 #menu {

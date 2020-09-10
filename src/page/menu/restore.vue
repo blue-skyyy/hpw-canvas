@@ -36,14 +36,14 @@ export default {
         if (!child.isBg) this.canvas.remove(child);
       });
 
+      const { imageInfo, rotate, scaleX, scaleY } = this.currItem;
+
       // 背景图片恢复
-      this.bg.scaleX = 1;
-      this.bg.scaleY = 1;
       this.bg.rotate(0);
       this.bg.center();
-
-      const { imageInfo, rotate } = this.currItem;
-
+      this.bg.scaleX = scaleX;
+      this.bg.scaleY = scaleY;
+      // canavs宽高
       this.canvas.setWidth(imageInfo.scale.width);
       this.canvas.setHeight(imageInfo.scale.height);
 

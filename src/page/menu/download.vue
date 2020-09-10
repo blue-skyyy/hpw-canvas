@@ -3,6 +3,15 @@
     <div class="menu_download">
       <div @click="dealClick" v-html="downloadIcon" class="eraser_icon"></div>
     </div>
+
+    <el-dialog title="请选择图片下载类型" :visible.sync="dialogVisible">
+      <el-button type="warning" @click.stop="download('origin')"
+        >下载原始图片</el-button
+      >
+      <el-button type="danger" @click.stop="download('current')"
+        >下载当前图片</el-button
+      >
+    </el-dialog>
   </div>
 </template>
 
@@ -19,11 +28,16 @@ export default {
     canvas: {
       default: () => {},
       type: Object
+    },
+    originUrl: {
+      default: "",
+      type: String
     }
   },
   data() {
     return {
-      downloadIcon: icons.download
+      downloadIcon: icons.download,
+      dialogVisible: false
       // isShow: false
     };
   },
@@ -42,8 +56,41 @@ export default {
     // }
   },
   methods: {
+    download(type) {
+      if (type === "origin") {
+        this.downloadOriginImg();
+      }
+
+      if (type === "current") {
+        this.downloadOriginImg;
+      }
+    },
     dealClick() {
       this.$emit("click");
+      this.dialogVisible = true;
+    },
+
+    downloadCurrentImg() {},
+    downloadOriginImg() {
+      if (!this.originUrl) return;
+      fetch(this.originUrl)
+        .then((res) => {
+          return res.blob();
+        })
+        .then((data) => {
+          let downloadLink = document.createElement("a");
+          downloadLink.href = window.URL.createObjectURL(data);
+          downloadLink.download = new Date().getTime() + ".jpeg";
+          document.body.appendChild(downloadLink);
+          downloadLink.click();
+          document.body.removeChild(downloadLink);
+          window.URL.revokeObjectURL(downloadLink.href);
+          this.dialogVisible = false;
+        })
+        .catch((err) => {
+          this.$message.error(err);
+          this.dialogVisible = false;
+        });
     }
   }
 };

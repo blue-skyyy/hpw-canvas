@@ -1,6 +1,8 @@
 const imageList = [
   // "http://lorempixel.com/400/400/fashion",
-  "http://b.hiphotos.baidu.com/image/pic/item/359b033b5bb5c9ea5c0e3c23d139b6003bf3b374.jpg",
+  "https://img.vipkidstatic.com/beeschool/server/20200827/235cd851-2a51-4745-b5a5-5c2451fb8e59.jpg", // 2400×1128
+  "https://media.vipkidstatic.com/beeschool/default/20200728/dd480c03-1e7e-491f-a138-8f4382496fde.png", // 1405x1047
+  "http://b.hiphotos.baidu.com/image/pic/item/359b033b5bb5c9ea5c0e3c23d139b6003bf3b374.jpg", // 800×533
   "http://a.hiphotos.baidu.com/image/pic/item/8d5494eef01f3a292d2472199d25bc315d607c7c.jpg",
   "http://g.hiphotos.baidu.com/image/pic/item/6d81800a19d8bc3e770bd00d868ba61ea9d345f2.jpg"
 ];
@@ -35,9 +37,8 @@ const scaleWH = (imageW, imageH, maxWidth, maxHeight) => {
       }
     }
     return {
-      // 让canvas有留白
-      width: Number((tempWidth - 10).toFixed(2)),
-      height: Number((tempHeight - 10).toFixed(2))
+      width: parseInt(tempWidth),
+      height: parseInt(tempHeight)
     };
   }
 };

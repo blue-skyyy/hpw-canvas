@@ -35,7 +35,7 @@ export default {
   },
   computed: {
     setStyle() {
-      return function(bgcolor) {
+      return function (bgcolor) {
         return {
           backgroundColor: bgcolor,
           width: "20px",
@@ -79,7 +79,7 @@ export default {
     transform: translate(-50%, 0);
     padding: 5px 3px;
     background: #383c36;
-    z-index: 9999;
+    z-index: 1000;
     &::after {
       z-index: 999;
       content: "";

@@ -25,6 +25,8 @@ class Item {
     this.zoom = 1;
     this.conWH = options.conWH;
     this.bgImg = options.bgImg;
+    this.scaleX = 1;
+    this.scaleY = 1;
 
     // 获取图片size，同时检测图片是否合法
     // TODO 考虑改为异步执行
@@ -50,7 +52,7 @@ class Item {
   }
 
   save(newUrl, history) {
-    console.log("fff", history);
+    console.log("save-------history", history);
     let jsonState = JSON.stringify(history);
     // 没有进行任何修改，则不产生新的历史记录
     if (jsonState === this.lastState) {
@@ -164,6 +166,11 @@ class Item {
           this.conWH.height
         );
 
+        let scaleX = Number(width / img.width);
+        let scaleY = Number(height / img.height);
+        this.scaleX = scaleX;
+        this.scaleY = scaleY;
+
         this.imageInfo = {
           origin: {
             width: img.width,
@@ -172,10 +179,9 @@ class Item {
           scale: {
             width,
             height
-            // width: parseInt(width),
-            // height: parseInt(height)
           }
         };
+
         resolve("ok");
       };
       img.onerror = (err) => {
