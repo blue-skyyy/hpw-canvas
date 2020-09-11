@@ -113,7 +113,7 @@ const methods = {
   fixState(state, { scaleX, scaleY }) {
     if (!state) {
       console.error("state is required");
-      return;
+      return false;
     }
     let stateObj = JSON.parse(state);
     stateObj.objects[0].scaleY = scaleY;
@@ -216,8 +216,8 @@ const methods = {
   freeDraw(canvas = this.canvas) {
     this.canvas.isDrawingMode = true;
     var hLinePatternBrush = new fabric.PatternBrush(canvas);
-    hLinePatternBrush.getPatternSrc = (function (fabric) {
-      return function () {
+    hLinePatternBrush.getPatternSrc = (function(fabric) {
+      return function() {
         var patternCanvas = fabric.document.createElement("canvas");
         patternCanvas.width = patternCanvas.height = 10;
         var ctx = patternCanvas.getContext("2d");
@@ -446,10 +446,17 @@ const methods = {
     let history = this.currItem.getPreHistory();
     const { scaleY, scaleX } = this.currItem;
     let fixHistory = this.fixState(history, { scaleX, scaleY });
-    this.canvas.loadFromJSON(fixHistory, () => {
-      this.historyChanging = false;
-      this.canvas.renderAll();
-    });
+    if (fixHistory) {
+      const historyObj = JSON.parse(fixHistory);
+      const { width, height } = historyObj;
+      this.canvas.loadFromJSON(fixHistory, () => {
+        if (width && height) {
+          this.setCanvasWH(width, height);
+        }
+        this.historyChanging = false;
+        this.canvas.renderAll();
+      });
+    }
   }
 };
 export default {
@@ -462,8 +469,8 @@ export default {
     });
 
     // 实现mouseover事件
-    canvas.findTarget = (function (originalFn) {
-      return function () {
+    canvas.findTarget = (function(originalFn) {
+      return function() {
         let target = originalFn.apply(this, arguments);
         if (target) {
           if (this._hoveredTarget !== target) {
@@ -564,7 +571,6 @@ export default {
   // overflow: hidden;
 }
 #image_canvas_wrap {
-  // box-sizing: border-box;
   box-sizing: content-box;
   width: 800px;
   height: 600px;
@@ -572,7 +578,7 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: scroll;
+  overflow: auto;
   background: #fff;
   background-image: linear-gradient(
       45deg,

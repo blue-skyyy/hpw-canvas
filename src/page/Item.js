@@ -19,7 +19,6 @@ class Item {
     this.invalid = false;
     this.rotate = 0;
     this.scaleWH = false;
-    this.zoomMode = options.zoomMode || "showAll";
     this.canvas = options.canvas;
     this.zoom = 1;
     this.conWH = options.conWH;

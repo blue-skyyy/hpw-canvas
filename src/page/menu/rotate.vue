@@ -60,17 +60,34 @@ export default {
   },
   methods: {
     rotateTo(direction) {
+      console.log("this.currItem", this.currItem);
+      console.log("---", this.canvas.getZoom());
+
+      // this.canvas.setZoom(1);
       this.currItem.rotateTo(direction);
       // 更新canvas的宽高
       const { imageInfo, rotate } = this.currItem;
+
+      console.log("imageInfo.scale.width", imageInfo.scale.width);
+      console.log("imageInfo.scale.height", imageInfo.scale.height);
       if (rotate % 180 === 0) {
+        console.log("A");
         this.canvas.setWidth(imageInfo.scale.width);
         this.canvas.setHeight(imageInfo.scale.height);
       } else {
+        console.log("B");
         this.canvas.setWidth(imageInfo.scale.height);
         this.canvas.setHeight(imageInfo.scale.width);
       }
-      // 作为组整体旋转
+
+      // setTimeout(() => {
+      //   let center = this.canvas.getCenter();
+      //   let zoomPoint = new fabric.Point(center.left, center.top);
+
+      //   console.log("zoomPoint", zoomPoint);
+      //   this.canvas.zoomToPoint({ x: 400, y: 188 }, 1);
+      // }, 2000);
+
       this.canvas.discardActiveObject();
       let sel = new fabric.ActiveSelection(this.canvas.getObjects(), {
         canvas: this.canvas,
@@ -80,9 +97,16 @@ export default {
 
       this.canvas.setActiveObject(sel);
       direction === "left" ? sel.rotate(-90) : sel.rotate(90);
+      sel.bottom = 0;
+      // sel.left = 0;
       sel.center();
 
       this.canvas.renderAll();
+
+      // let center = this.canvas.getCenter();
+      // let zoomPoint = new fabric.Point(center.left, center.top);
+
+      // 作为组整体旋转
     }
   }
 };
