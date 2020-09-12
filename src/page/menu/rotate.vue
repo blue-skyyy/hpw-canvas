@@ -1,10 +1,15 @@
 <template>
-  <div :style="setStyle(rotateLeft, rotateRight)" class="menu_rotate">
-    <div :style="!rotateLeft && 'display:none'" @click="rotateTo('left')">
-      <div class="icon" v-html="icons.rotateLeft"></div>
+  <div :style="setStyle(rotateLeft, rotateRight)"
+       class="menu_rotate">
+    <div :style="!rotateLeft && 'display:none'"
+         @click="rotateTo('left')">
+      <div class="icon"
+           v-html="icons.rotateLeft"></div>
     </div>
-    <div @click="rotateTo('right')" :style="!rotateRight && 'display:none'">
-      <div class="icon" v-html="icons.rotateRight"></div>
+    <div @click="rotateTo('right')"
+         :style="!rotateRight && 'display:none'">
+      <div class="icon"
+           v-html="icons.rotateRight"></div>
     </div>
   </div>
 </template>
@@ -16,11 +21,11 @@ export default {
   props: {
     canvas: {
       type: Object,
-      default: () => {}
+      default: () => { }
     },
     currItem: {
       type: Object,
-      default: () => {}
+      default: () => { }
     },
     rotateRight: {
       type: Boolean,
@@ -31,14 +36,14 @@ export default {
       default: false
     }
   },
-  data() {
+  data () {
     return {
       icons
     };
   },
   computed: {
-    setStyle() {
-      return function(left, right) {
+    setStyle () {
+      return function (left, right) {
         if (left && right) {
           return {
             display: "flex",
@@ -59,54 +64,41 @@ export default {
     }
   },
   methods: {
-    rotateTo(direction) {
-      console.log("this.currItem", this.currItem);
-      console.log("---", this.canvas.getZoom());
+    rotateTo (direction) {
 
-      // this.canvas.setZoom(1);
       this.currItem.rotateTo(direction);
-      // 更新canvas的宽高
+      //  更新canvas的宽高
       const { imageInfo, rotate } = this.currItem;
-
-      console.log("imageInfo.scale.width", imageInfo.scale.width);
-      console.log("imageInfo.scale.height", imageInfo.scale.height);
+      // 保持水平垂直居中
+      let wrap = document.querySelector("#image_canvas_wrap");
       if (rotate % 180 === 0) {
-        console.log("A");
         this.canvas.setWidth(imageInfo.scale.width);
         this.canvas.setHeight(imageInfo.scale.height);
+        wrap.style["align-items"] = "center";
       } else {
-        console.log("B");
         this.canvas.setWidth(imageInfo.scale.height);
         this.canvas.setHeight(imageInfo.scale.width);
+        wrap.style["align-items"] = "flex-start";
       }
-
-      // setTimeout(() => {
-      //   let center = this.canvas.getCenter();
-      //   let zoomPoint = new fabric.Point(center.left, center.top);
-
-      //   console.log("zoomPoint", zoomPoint);
-      //   this.canvas.zoomToPoint({ x: 400, y: 188 }, 1);
-      // }, 2000);
-
+      // 作为组整体旋转
       this.canvas.discardActiveObject();
       let sel = new fabric.ActiveSelection(this.canvas.getObjects(), {
         canvas: this.canvas,
         cornerSize: 0,
-        hasControls: false
+        hasControls: true
       });
 
       this.canvas.setActiveObject(sel);
       direction === "left" ? sel.rotate(-90) : sel.rotate(90);
-      sel.bottom = 0;
-      // sel.left = 0;
+      // 恢复缩放
+      let center = this.canvas.getCenter();
+      let zoomPoint = new fabric.Point(center.top, center.left);
+      this.canvas.zoomToPoint(zoomPoint, 1);
+      // 组居中
       sel.center();
-
       this.canvas.renderAll();
 
-      // let center = this.canvas.getCenter();
-      // let zoomPoint = new fabric.Point(center.left, center.top);
 
-      // 作为组整体旋转
     }
   }
 };
