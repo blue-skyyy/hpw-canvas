@@ -41,19 +41,14 @@ export default {
     setZoom(type) {
       // 以中心点为基点做缩放
       let zoom = this.canvas.getZoom();
-
-      console.log("zoom", zoom);
       let center = this.canvas.getCenter();
       let zoomPoint = new fabric.Point(center.left, center.top);
-
-      console.log("zoomPoint", zoomPoint);
       if (type == "out") {
         // 放大
         zoom = zoom + this.zoomStep;
         zoom = Math.min(3, zoom); //最大是原来的3倍
         this.canvas.zoomToPoint(zoomPoint, zoom);
       }
-
       if (type === "in") {
         zoom = zoom - this.zoomStep;
         zoom = Math.max(0.1, zoom); //最小为原来的1/10

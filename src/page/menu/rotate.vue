@@ -1,15 +1,10 @@
 <template>
-  <div :style="setStyle(rotateLeft, rotateRight)"
-       class="menu_rotate">
-    <div :style="!rotateLeft && 'display:none'"
-         @click="rotateTo('left')">
-      <div class="icon"
-           v-html="icons.rotateLeft"></div>
+  <div :style="setStyle(rotateLeft, rotateRight)" class="menu_rotate">
+    <div :style="!rotateLeft && 'display:none'" @click="rotateTo('left')">
+      <div class="icon" v-html="icons.rotateLeft"></div>
     </div>
-    <div @click="rotateTo('right')"
-         :style="!rotateRight && 'display:none'">
-      <div class="icon"
-           v-html="icons.rotateRight"></div>
+    <div @click="rotateTo('right')" :style="!rotateRight && 'display:none'">
+      <div class="icon" v-html="icons.rotateRight"></div>
     </div>
   </div>
 </template>
@@ -21,11 +16,11 @@ export default {
   props: {
     canvas: {
       type: Object,
-      default: () => { }
+      default: () => {}
     },
     currItem: {
       type: Object,
-      default: () => { }
+      default: () => {}
     },
     rotateRight: {
       type: Boolean,
@@ -36,14 +31,14 @@ export default {
       default: false
     }
   },
-  data () {
+  data() {
     return {
       icons
     };
   },
   computed: {
-    setStyle () {
-      return function (left, right) {
+    setStyle() {
+      return function(left, right) {
         if (left && right) {
           return {
             display: "flex",
@@ -64,8 +59,7 @@ export default {
     }
   },
   methods: {
-    rotateTo (direction) {
-
+    rotateTo(direction) {
       this.currItem.rotateTo(direction);
       //  更新canvas的宽高
       const { imageInfo, rotate } = this.currItem;
@@ -87,7 +81,6 @@ export default {
         cornerSize: 0,
         hasControls: true
       });
-
       this.canvas.setActiveObject(sel);
       direction === "left" ? sel.rotate(-90) : sel.rotate(90);
       // 恢复缩放
@@ -97,8 +90,6 @@ export default {
       // 组居中
       sel.center();
       this.canvas.renderAll();
-
-
     }
   }
 };

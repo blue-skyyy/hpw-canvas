@@ -1,68 +1,86 @@
 <template>
   <div>
     <div id="container">
-      <div id="image_canvas_wrap"
-           ref="image_canvas_wrap">
-        <canvas id="image_canvas"
-                ref="image_canvas"></canvas>
+      <div id="image_canvas_wrap" ref="image_canvas_wrap">
+        <canvas id="image_canvas" ref="image_canvas"></canvas>
       </div>
       <div id="menu">
-        <menu-switch-image @prevFunc="prev"
-                           @nextFunc="next"
-                           :prev="myConfig && myConfig.prev"
-                           :next="myConfig && myConfig.next"
-                           class="menu_item">
+        <menu-switch-image
+          @prevFunc="prev"
+          @nextFunc="next"
+          :prev="myConfig && myConfig.prev"
+          :next="myConfig && myConfig.next"
+          class="menu_item"
+        >
         </menu-switch-image>
 
-        <menu-undo :mode="mode"
-                   :canvas="canvas"
-                   @click="switchMode('undo')"
-                   class="menu_item"></menu-undo>
+        <menu-undo
+          :mode="mode"
+          :canvas="canvas"
+          @click="switchMode('undo')"
+          class="menu_item"
+        ></menu-undo>
 
-        <menu-drag :mode="mode"
-                   :canvas="canvas"
-                   @click="switchMode('drag')"
-                   class="menu_item" />
-        <menu-pencil :mode="mode"
-                     :canvas="canvas"
-                     @click="switchMode('pencil')"
-                     :color="myConfig && myConfig.color"
-                     :pencilSizeList="myConfig && myConfig.pencilSizeList"
-                     :pencilSize="myConfig && myConfig.pencilSize"
-                     @changeConfig="changeConfig"
-                     ref="pencil"
-                     class="menu_item" />
+        <menu-drag
+          :mode="mode"
+          :canvas="canvas"
+          @click="switchMode('drag')"
+          class="menu_item"
+        />
+        <menu-pencil
+          :mode="mode"
+          :canvas="canvas"
+          @click="switchMode('pencil')"
+          :color="myConfig && myConfig.color"
+          :pencilSizeList="myConfig && myConfig.pencilSizeList"
+          :pencilSize="myConfig && myConfig.pencilSize"
+          @changeConfig="changeConfig"
+          ref="pencil"
+          class="menu_item"
+        />
 
-        <menu-eraser :canvas="canvas"
-                     :mode="mode"
-                     @click="switchMode('eraser')"
-                     class="menu_item" />
-        <menu-color @click="switchMode"
-                    class="menu_item"
-                    :colorList="myConfig && myConfig.colorList"
-                    :mode="mode"
-                    @changeConfig="changeConfig">
+        <menu-eraser
+          :canvas="canvas"
+          :mode="mode"
+          @click="switchMode('eraser')"
+          class="menu_item"
+        />
+        <menu-color
+          @click="switchMode"
+          class="menu_item"
+          :colorList="myConfig && myConfig.colorList"
+          :mode="mode"
+          @changeConfig="changeConfig"
+        >
         </menu-color>
 
-        <menu-rotate class="menu_item"
-                     :canvas="canvas"
-                     :currItem="currItem"
-                     :rotateRight="myConfig && myConfig.rotateRight"
-                     :rotateLeft="myConfig && myConfig.rotateLeft" />
+        <menu-rotate
+          class="menu_item"
+          :canvas="canvas"
+          :currItem="currItem"
+          :rotateRight="myConfig && myConfig.rotateRight"
+          :rotateLeft="myConfig && myConfig.rotateLeft"
+        />
 
-        <menu-zoom class="menu_item"
-                   :canvas="canvas"
-                   :zoomIn="myConfig && myConfig.zoomIn"
-                   :zoomOut="myConfig && myConfig.zoomOut" />
+        <menu-zoom
+          class="menu_item"
+          :canvas="canvas"
+          :zoomIn="myConfig && myConfig.zoomIn"
+          :zoomOut="myConfig && myConfig.zoomOut"
+        />
 
-        <menu-restore :canvas="canvas"
-                      :bg="currItem && currItem.bgImg"
-                      :currItem="currItem"
-                      class="menu_item"></menu-restore>
+        <menu-restore
+          :canvas="canvas"
+          :bg="currItem && currItem.bgImg"
+          :currItem="currItem"
+          class="menu_item"
+        ></menu-restore>
 
-        <menu-download :canvas="canvas"
-                       class="menu_item"
-                       @exportImage="exportImage">
+        <menu-download
+          :canvas="canvas"
+          class="menu_item"
+          :exportImage="exportImage"
+        >
         </menu-download>
 
         <button @click="saveCurrItemState">点我保存状态</button>
@@ -71,15 +89,14 @@
       </div>
     </div>
 
-    <img :src="imgUrl"
-         style="border: 1px solid blue" />
-    <img :src="imgUrlExport"
-         style="border: 1px solid green" />
+    <img :src="imgUrl" style="border: 1px solid blue" />
+    <img :src="imgUrlExport" style="border: 1px solid green" />
   </div>
 </template>
 
 <script>
 import { fabric } from "fabric";
+import _ from "lodash";
 import { imageList } from "./util.js";
 import Item from "./Item";
 import MenuDrag from "./menu/drag.vue";
@@ -92,9 +109,32 @@ import MenuEraser from "./menu/eraser.vue";
 import MenuSwitchImage from "./menu/switchImage.vue";
 import MenuDownload from "./menu/download.vue";
 import MenuUndo from "./menu/undo.vue";
+// fabric.Object.prototype.set({
+//   borderColor: "red",
+//   cornerColor: "red", //激活状态角落图标的填充颜色
+//   cornerStrokeColor: "", //激活状态角落图标的边框颜色
+//   borderOpacityWhenMoving: 1,
+//   borderScaleFactor: 1,
+//   cornerSize: 8,
+//   cornerStyle: "rect", //rect,circle
+//   centeredScaling: false, //角落放大缩小是否是以图形中心为放大原点
+//   centeredRotation: true, //旋转按钮旋转是否是左上角为圆心旋转
+//   transparentCorners: false, //激活状态角落的图标是否透明
+//   rotatingPointOffset: 20, //旋转距旋转体的距离
+//   originX: "center",
+//   originY: "center",
+//   lockUniScaling: false, //只显示四角的操作
+//   hasRotatingPoint: true, //是否显示旋转按钮
+//   selectionDashArray: [5, 5]
+// });
 const methods = {
+  // 延迟存储
+
+  preSave: _.debounce(function() {
+    this.saveCurrItemState();
+  }, 4000),
   // 调整快照状态
-  fixState (state, { scaleX, scaleY }) {
+  fixState(state, { scaleX, scaleY }) {
     if (!state) {
       console.error("state is required");
       return false;
@@ -105,7 +145,7 @@ const methods = {
     return JSON.stringify(stateObj);
   },
   // 导出图片的方法
-  exportImageFunc (item) {
+  exportImageFunc(item) {
     return new Promise((reslove, reject) => {
       if (!item) reject("item is required, item:", item);
       // this.saveCurrItemState(); // 导出时候默认保存一次，避免状态遗漏
@@ -120,7 +160,7 @@ const methods = {
       if (!exportCanvas) {
         exportCanvas = document.createElement("canvas");
         exportCanvas.id = "export_canvas";
-        exportCanvas.style.border = "1px solid red";
+        // exportCanvas.style.border = "1px solid red";
       } else {
         exportCanvas.getObjects().forEach((child) => {
           exportCanvas.remove(child);
@@ -163,7 +203,7 @@ const methods = {
       });
     });
   },
-  exportImage (type, index = this.currIndex) {
+  exportImage(type, index = this.currIndex) {
     // 导出单张(默认当前)或所有
     if (!this.currItem || !type) return;
     this.saveCurrItemState(); // 导出时候默认保存当前item一次，避免状态遗漏
@@ -183,7 +223,7 @@ const methods = {
       });
     }
   },
-  initDocumentEvents () {
+  initDocumentEvents() {
     // 点击菜单外区域将弹出层清除
     document.addEventListener("click", (e) => {
       let menu = document.querySelector("#menu");
@@ -193,15 +233,15 @@ const methods = {
       }
     });
   },
-  changeConfig (prop, value) {
+  changeConfig(prop, value) {
     this.myConfig[prop] = value;
     // console.log(" this.myConfig----change", this.myConfig);
   },
-  freeDraw (canvas = this.canvas) {
+  freeDraw(canvas = this.canvas) {
     this.canvas.isDrawingMode = true;
     var hLinePatternBrush = new fabric.PatternBrush(canvas);
-    hLinePatternBrush.getPatternSrc = (function (fabric) {
-      return function () {
+    hLinePatternBrush.getPatternSrc = (function(fabric) {
+      return function() {
         var patternCanvas = fabric.document.createElement("canvas");
         patternCanvas.width = patternCanvas.height = 10;
         var ctx = patternCanvas.getContext("2d");
@@ -219,7 +259,7 @@ const methods = {
     canvas.freeDrawingBrush = hLinePatternBrush;
     // canvas.freeDrawingBrush.width = 20;
   },
-  switchMode (mode) {
+  switchMode(mode) {
     // if (this.mode === mode) {
     //   this.mode = "";
     //   return;
@@ -231,11 +271,15 @@ const methods = {
     if (mode === "undo") {
       this.undo();
     }
+
+    if (mode === "pencil") {
+      // this.preSave();
+    }
   },
-  test () {
+  test() {
     this.freeDraw(this.canvas);
   },
-  addrect () {
+  addrect() {
     var rect = new fabric.Rect({
       top: 50, //距离画布上边的距离
       left: 100, //距离画布左侧的距离，单位是像素
@@ -252,31 +296,38 @@ const methods = {
     this.canvas.add(rect);
     this.canvas.renderAll();
   },
-  delreact () {
+  delreact() {
     this.canvas.remove(this.rect);
     this.canvas.renderAll();
   },
-  prev () {
+  prev() {
     this.currIndex -= 1;
     this.switchImage(this.currIndex);
   },
-  next () {
+  next() {
     this.currIndex += 1;
     this.switchImage(this.currIndex);
   },
-  setCanvasWH (w, h) {
+  setCanvasWH(w, h) {
     this.canvas.setWidth(w);
     this.canvas.setHeight(h);
   },
-  initCanvasEvents () {
+  initCanvasEvents() {
     this.canvas.on("object:added", this.dealAdd);
     this.canvas.on("object:modified", this.dealModify);
     this.canvas.on("object:removed", this.dealRemove);
 
     // this.canvas.on("mouse:wheel", this.mouseWheel);
-    this.canvas.on("path:created", this.dealCreated);
+    this.canvas.on("path:created", this.dealPathCreated);
   },
-  dealCreated () {
+  dealPathCreated(e) {
+    // console.log("path----created", e);
+    // this.canvas.remove(e.path);
+    // this.canvas.renderAll();
+
+    if (e.path.className === "custom_path") {
+      //
+    }
     if (this.mode === "eraser") {
       // let objs = this.canvas.getObjects();
       // console.log("objs", objs);
@@ -302,11 +353,18 @@ const methods = {
 
     // this.canvas.renderAll();
   },
-  toNext () {
+  toNext() {
     this.currIndex += 1;
     this.switchImage(this.currIndex);
   },
-  dealAdd (e) {
+  dealAdd(e) {
+    let target = e.target;
+    // console.log("dealAdd", target);
+    if (target.get("type") === "path") {
+      if (target.className !== "custom_path") {
+        this.canvas.remove(e.target);
+      }
+    }
     // console.log("----dealAdd----", e);
     if (this.historyChanging) return;
     if (e.target.isBg) return;
@@ -321,21 +379,21 @@ const methods = {
     //   return;
     // }
   },
-  dealModify () {
+  dealModify() {
     if (this.historyChanging) return;
     // console.log("added");
   },
-  dealRemove () {
+  dealRemove() {
     if (this.historyChanging) return;
     // console.log("removed");
   },
-  clearBoard () {
+  clearBoard() {
     this.canvas.getObjects().forEach((child) => {
       this.canvas.remove(child);
     });
   },
 
-  afterSwitch (index, itemObj, firstRender = false) {
+  afterSwitch(index, itemObj, firstRender = false) {
     const { imageInfo, scaleX, scaleY } = itemObj;
     if (firstRender) {
       let bgImg = new fabric.Image();
@@ -381,7 +439,7 @@ const methods = {
       // 非首次加载
     }
   },
-  switchImage (index) {
+  switchImage(index) {
     if (this.currIndex < 0) return;
     let obj = this.imageList[index];
     if (!obj) return;
@@ -413,7 +471,7 @@ const methods = {
       });
     }
   },
-  saveCurrItemState () {
+  saveCurrItemState() {
     console.count("=======saveCurrItemState=======");
     // 保存当前每个实例状态
     if (!this.currItem) return;
@@ -425,7 +483,7 @@ const methods = {
     );
     this.imgUrl = imgData;
   },
-  undo () {
+  undo() {
     if (!this.currItem || this.historyChanging) return;
     let history = this.currItem.getPreHistory();
     const { scaleY, scaleX } = this.currItem;
@@ -444,17 +502,18 @@ const methods = {
   }
 };
 export default {
-  mounted () {
+  mounted() {
     // 静用缓存 该属性会对line hover事件产生影响 高亮不生效
     fabric.Object.prototype.objectCaching = false;
     let canvas = new fabric.Canvas("image_canvas", {
       backgroundColor: "#fff"
+      // selection: false
       // isDrawingMode: true
     });
 
     // 实现mouseover事件
-    canvas.findTarget = (function (originalFn) {
-      return function () {
+    canvas.findTarget = (function(originalFn) {
+      return function() {
         let target = originalFn.apply(this, arguments);
         if (target) {
           if (this._hoveredTarget !== target) {
@@ -477,6 +536,7 @@ export default {
     this.initCanvasEvents();
 
     this.initDocumentEvents();
+
     // this.freeDraw(canvas);
 
     this.imageList = this.imageList.map((d) => {
@@ -494,16 +554,17 @@ export default {
         height: containerDOM.clientHeight
       };
       this.toNext();
+      this.addrect();
     });
   },
   methods,
   props: {
     config: {
-      default: () => { },
+      default: () => {},
       type: Object
     }
   },
-  data () {
+  data() {
     const defaultConfig = {
       colorList: ["red", "green", "blue", "pink"],
       color: "red",

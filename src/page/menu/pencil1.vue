@@ -14,9 +14,6 @@
   </div>
 </template>
 <script>
-// 两个问题
-// 1. 用pointer去模拟库事件，会影响整体大小
-// 2. 删除时候由于写了多次会导致path成为多条path
 import { fabric } from "fabric";
 // import { fabric } from "fabric";
 // import Pressure from "pressure";
@@ -70,7 +67,7 @@ export default {
     }
   },
   methods: {
-    onPointup(e) {
+    handleUp(e) {
       if (!this.canDraw) return;
       const { x, y, pressure } = this.getPos(e);
       this.priviousPressure = pressure;
@@ -96,7 +93,7 @@ export default {
       this.canDraw = false;
       this.points = [];
     },
-    onPointdown(e) {
+    handleDown(e) {
       this.canDraw = true;
       const { x, y, pressure } = this.getPos(e);
       this.priviousPressure = pressure;
@@ -104,19 +101,19 @@ export default {
       this.points.push({ x, y, command: "M" });
       this.beginPoint = { x, y };
     },
-    onPointmove(e) {
+    handleMove(e) {
       if (!this.canDraw) return;
       const { x, y, pressure } = this.getPos(e);
       this.priviousPressure = pressure;
       this.points.push({ x, y, command: "L" });
       if (this.points.length > 3) {
         const lastTwoPoints = this.points.slice(-2);
-        // const controlPoint = lastTwoPoints[0];
+        const controlPoint = lastTwoPoints[0];
         const endPoint = {
           x: (lastTwoPoints[0].x + lastTwoPoints[1].x) / 2,
           y: (lastTwoPoints[0].y + lastTwoPoints[1].y) / 2
         };
-        // this.drawPath(this.beginPoint, controlPoint, endPoint, pressure);
+        this.drawPath(this.beginPoint, controlPoint, endPoint, pressure);
         this.beginPoint = endPoint;
       }
     },
@@ -143,46 +140,11 @@ export default {
     },
 
     getPos(e) {
-      console.log("e", e);
-      // let pointer = {
       return {
-        x: e.layerX,
-        y: e.layerY,
-        // x: e.offsetX,
-        // y: e.offsetY,
-        pressure: e.pressure
+        x: e.absolutePointer.x,
+        y: e.absolutePointer.y,
+        pressure: 1
       };
-
-      // let drawCanvasEl = document.querySelector("#image_canvas_wrap");
-      // const bounds = drawCanvasEl.getBoundingClientRect();
-      // let boundsWidth = bounds.width || 0;
-      // let boundsHeight = bounds.height || 0;
-      // let cssScale;
-
-      // if (!boundsWidth || !boundsHeight) {
-      //   if ("top" in bounds && "bottom" in bounds) {
-      //     boundsHeight = Math.abs(bounds.top - bounds.bottom);
-      //   }
-      //   if ("right" in bounds && "left" in bounds) {
-      //     boundsWidth = Math.abs(bounds.right - bounds.left);
-      //   }
-      // }
-
-      // if (boundsWidth === 0 || boundsHeight === 0) {
-      //   // If bounds are not available (i.e. not visible), do not apply scale.
-      //   cssScale = { width: 1, height: 1 };
-      // } else {
-      //   cssScale = {
-      //     width: drawCanvasEl.width / boundsWidth,
-      //     height: drawCanvasEl.height / boundsHeight
-      //   };
-      // }
-
-      // return {
-      //   x: (pointer.x - bounds.left) * 1,
-      //   y: (pointer.y - bounds.top) * 1,
-      //   pressure: e.pressure
-      // };
     },
 
     drawPath(beginPoint, controlPoint, endPoint, width) {
@@ -201,56 +163,21 @@ export default {
       this.ctx.stroke();
       this.ctx.closePath();
       let p = this.pathToCurve(this.points);
-      console.log("p", p);
       var path = new fabric.Path(p, {
         fill: null,
         stroke: "green",
-        strokeWidth: 4,
+        strokeWidth: width,
         strokeLineCap: "round",
         strokeLineJoin: "round",
-        originX: "center",
-        originY: "top",
-        // left: 100,
-        // top: 100,
-        // evented: true,
-        hasControls: true,
-        hasBorders: true,
+        evented: false,
+        hasControls: false,
+        hasBorders: false,
         selectable: true,
-        isDrawingMode: false,
-        className: "custom_path"
-        // objectCaching: false
+        isDrawingMode: false
         // strokeStyle
       });
-
-      // var path = new fabric.Path("M 65 0 Q 100, 100, 200, 0");
-      // var path = new fabric.Path("M 65 0 Q 100, 100, 200, 0", {
-      //   fill: "",
-      //   stroke: "black"
-      //   objectCaching: false
-      // });
-      // path.set({ left: 10, top: 0 });
-      // canvas.add(path);
-      path.padding = 0;
-      path.setCoords();
-
-      path.set("className", "custom_path");
-
-      // path.on("mousedown", this.onMouseDownLine);s
-      // path.on("mousemove", this.onMouseMoveLine);
       this.canvas.add(path);
-      // this.canvas.setActiveObject(path);
-      this.canvas.requestRenderAll();
     },
-
-    // onMouseDownLine(e) {
-    //   console.log("onMouseDownLine");
-    //   // console.log("e", e.target.get("type"));
-    //   if (!e.target) return;
-
-    //   this.canvas.remove(e.target);
-    //   this.canvas.renderAll();
-    //   // this.sendDeleteLinePath(target.id);
-    // },
     unShow() {
       this.isShow = false;
     },
@@ -267,41 +194,59 @@ export default {
     },
 
     freeDraw() {
+      // const that = this;
+      // var hLinePatternBrush = new fabric.PatternBrush(this.canvas);
+      // hLinePatternBrush.getPatternSrc = (function(fabric) {
+      //   return function() {
+      //     var patternCanvas = fabric.document.createElement("canvas");
+      //     patternCanvas.width = patternCanvas.height = 10;
+      //     var ctx = patternCanvas.getContext("2d");
+      //     ctx.strokeStyle = "green";
+      //     ctx.lineWidth = 40;
+      //     ctx.beginPath();
+      //     ctx.moveTo(5, 0);
+      //     ctx.lineTo(5, 10);
+      //     ctx.closePath();
+      //     ctx.stroke();
+      //     return patternCanvas;
+      //   };
+      // })(fabric);
+
+      // this.canvas.freeDrawingBrush = hLinePatternBrush;
+      // this.canvas.freeDrawingBrush.width = 5;
       let cxt = this.canvas.getContext("2d");
       cxt.globalCompositeOperation = "source-over";
       // fabric.Path.globalCompositeOperation = "source-over";
       this.canvas.freeDrawingBrush = null;
       let pencilBrush = new fabric.PencilBrush(this.canvas);
 
-      // console.log("color", this.color, "width", this.pencilSize);
-      // pencilBrush.color = this.color;
+      console.log("color", this.color, "width", this.pencilSize);
+      pencilBrush.color = this.color;
       pencilBrush.width = this.pencilSize;
       this.canvas.freeDrawingBrush = pencilBrush;
     }
   },
   watch: {
     mode(newMode) {
+      // if (newMode !== "pencil") {
+      //   this.canvas.isDrawingMode = false;
+      //   this.canvas.off("mouse:down");
+      //   this.canvas.off("mouse:up");
+      //   this.canvas.off("mouse:move");
+      // }
       if (newMode === "pencil") {
         this.canvas.discardActiveObject();
         // console.log("A");
         this.pencil = icons.activePencil;
         this.canvas.isDrawingMode = true;
         // this.isShow = true;
-        // let brush = this.canvas.freeDrawingBrush;
-        // brush.color = this.color;
-        // brush.width = this.pencilSize;
-
-        let container = document.querySelector("#image_canvas_wrap");
-        container.addEventListener("pointerdown", this.onPointdown);
-        container.addEventListener("pointermove", this.onPointmove);
-        container.addEventListener("pointerup", this.onPointup);
-        container.addEventListener("pointerleave", this.onPointleave);
-
-        // console.log("container", container);
+        let brush = this.canvas.freeDrawingBrush;
+        brush.color = this.color;
+        brush.width = this.pencilSize;
         // this.freeDraw();
-        // this.canvas.on("mouse:down", this.handleDown);
-        // this.canvas.on("mouse:move", this.handleMove);
-        // this.canvas.on("mouse:up", this.handleUp);
+        this.canvas.on("mouse:down", this.handleDown);
+        this.canvas.on("mouse:move", this.handleMove);
+        this.canvas.on("mouse:up", this.handleUp);
       }
 
       if (newMode !== "pencil") {
@@ -309,11 +254,6 @@ export default {
         this.canvas.isDrawingMode = false;
         this.pencil = icons.pencil;
         this.isShow = false;
-
-        let container = document.querySelector("#image_canvas_wrap");
-        container.removeEventListener("pointerdown", this.onPointdown);
-        container.removeEventListener("pointermove", this.onPointmove);
-        container.removeEventListener("pointerup", this.onPointup);
       }
     },
     pencilSize(val) {
