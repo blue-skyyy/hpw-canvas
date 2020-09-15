@@ -17,6 +17,7 @@
 // 两个问题
 // 1. 用pointer去模拟库事件，会影响整体大小
 // 2. 删除时候由于写了多次会导致path成为多条path
+// 3. canvas缩放后在添加path path不能正确添加
 import { fabric } from "fabric";
 // import { fabric } from "fabric";
 // import Pressure from "pressure";
@@ -83,12 +84,40 @@ export default {
       this.drawPath(ctxCanvasPathString);
     },
     getPos(e) {
-      return {
+      console.log("e", e);
+      let pointer = {
         x: e.offsetX,
         y: e.offsetY
-        // pressure: e.pressure
       };
+      return pointer;
+      // const bounds = this.container.getBoundingClientRect();
+      // let boundsWidth = bounds.width || 0;
+      // let boundsHeight = bounds.height || 0;
+      // let cssScale;
+      // if (!boundsWidth || !boundsHeight) {
+      //   if ("top" in bounds && "bottom" in bounds) {
+      //     boundsHeight = Math.abs(bounds.top - bounds.bottom);
+      //   }
+      //   if ("right" in bounds && "left" in bounds) {
+      //     boundsWidth = Math.abs(bounds.right - bounds.left);
+      //   }
+      // }
+
+      // if (boundsWidth === 0 || boundsHeight === 0) {
+      //   // If bounds are not available (i.e. not visible), do not apply scale.
+      //   cssScale = { width: 1, height: 1 };
+      // } else {
+      //   cssScale = {
+      //     width: 800 / boundsWidth,
+      //     height: 376 / boundsHeight
+      //   };
+      // }
+      // return {
+      //   x: (pointer.x - bounds.left) * cssScale.width,
+      //   y: (pointer.y - bounds.top) * cssScale.height
+      // };
     },
+
     pathStart({ x, y }) {
       this.positionStarStr = `M ${x} ${y}`;
     },
@@ -196,7 +225,7 @@ export default {
       let path = new fabric.Path(str, {
         fill: null,
         stroke: "green",
-        strokeWidth: 4,
+        strokeWidth: 2,
         strokeLineCap: "round",
         strokeLineJoin: "round",
         // originX: "center",
@@ -232,7 +261,8 @@ export default {
       // canvas.add(path);
       // path.padding = 0;
       // path.setCoords();
-
+      // path.setCoords(false, false);
+      // path.scaleX(0.4);
       path.set("className", "custom_path");
 
       // path.on("mousedown", this.onMouseDownLine);s
@@ -291,6 +321,7 @@ export default {
         // brush.width = this.pencilSize;
 
         let container = document.querySelector("#image_canvas_wrap");
+        this.container = container;
         container.addEventListener("pointerdown", this.onPointdown);
         container.addEventListener("pointermove", this.onPointmove);
         container.addEventListener("pointerup", this.onPointup);
