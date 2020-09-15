@@ -56,7 +56,8 @@ export default {
       pressure: null,
       // baseLineList: [6, 10, 15, 25],
       pencil: icons.pencil,
-      isShow: false
+      isShow: false,
+      positionStarStr: ""
     };
   },
   computed: {
@@ -70,56 +71,105 @@ export default {
     }
   },
   methods: {
-    onPointup(e) {
+    pathEnd() {
       if (!this.canDraw) return;
-      const { x, y, pressure } = this.getPos(e);
-      this.priviousPressure = pressure;
-      this.points.push({ x, y, command: "L" });
-      if (this.points.length > 3) {
-        const lastTwoPoints = this.points.slice(-2);
-        const controlPoint = lastTwoPoints[0];
-        const endPoint = {
-          x: (lastTwoPoints[0].x + lastTwoPoints[1].x) / 2,
-          y: (lastTwoPoints[0].y + lastTwoPoints[1].y) / 2
-        };
-        this.drawPath(
-          this.beginPoint,
-          controlPoint,
-          endPoint,
-          (this.priviousPressure + pressure) / 2
-        );
-        this.beginPoint = endPoint;
-      } else {
-        this.priviousPressure = pressure;
-      }
-      this.beginPoint = null;
-      this.canDraw = false;
+      let ctxCanvasPathString = this.pathToCurve(this.points);
+      ctxCanvasPathString = `${this.positionStarStr} ${ctxCanvasPathString}`;
+      this.positionStarStr = "";
       this.points = [];
+      this.canDraw = false;
+      // ctxCanvasPathString =
+      // "M 347 114 Q 352 114 354 114 Q 365 114 370 114 Q 383 114 387 116 Q 392 117 392 117 Q 395 117 395 117 Q 397 113 400 110 Q 406 103 410 99 Q 417 91 418 89 Q 420 87 420 86 Q 422 86 422 85 Q 422 83 423 83 Q 424 82 426 82 Q 426 82 427 82 Q 427 81 426 81 L 424 78";
+      this.drawPath(ctxCanvasPathString);
+    },
+    getPos(e) {
+      return {
+        x: e.offsetX,
+        y: e.offsetY
+        // pressure: e.pressure
+      };
+    },
+    pathStart({ x, y }) {
+      this.positionStarStr = `M ${x} ${y}`;
+    },
+    onPointup() {
+      if (!this.canDraw) return;
+      this.pathEnd();
+      // let pos = this.getPos(e);
+      // this.points.push({ x: pos.x, y: pos.y, command: "M" });
+      // this.drawPath();
+      // this.points = [];
+      // this.positionStarStr = null;
+      // this.canDraw = false;
     },
     onPointdown(e) {
       this.canDraw = true;
-      const { x, y, pressure } = this.getPos(e);
-      this.priviousPressure = pressure;
-      // this.points.push({ x, y });
-      this.points.push({ x, y, command: "M" });
-      this.beginPoint = { x, y };
+      let pos = this.getPos(e);
+      this.positionStarStr = `M ${pos.x} ${pos.y}`;
+      // this.points.push({ x: pos.x, y: pos.y, command: "M" });
     },
     onPointmove(e) {
       if (!this.canDraw) return;
-      const { x, y, pressure } = this.getPos(e);
-      this.priviousPressure = pressure;
-      this.points.push({ x, y, command: "L" });
-      if (this.points.length > 3) {
-        const lastTwoPoints = this.points.slice(-2);
-        // const controlPoint = lastTwoPoints[0];
-        const endPoint = {
-          x: (lastTwoPoints[0].x + lastTwoPoints[1].x) / 2,
-          y: (lastTwoPoints[0].y + lastTwoPoints[1].y) / 2
-        };
-        // this.drawPath(this.beginPoint, controlPoint, endPoint, pressure);
-        this.beginPoint = endPoint;
-      }
+      let pos = this.getPos(e);
+      this.points.push({ x: pos.x, y: pos.y, command: "L" });
     },
+
+    // onPointleave(e) {
+    //   if (!this.canDraw) return;
+    //   let pos = this.getPos(e);
+    //   this.points.push({ x: pos.x, y: pos.y, command: "M" });
+    //   this.canDraw = false;
+    // },
+
+    // onPointup(e) {
+    //   if (!this.canDraw) return;
+    //   const { x, y, pressure } = this.getPos(e);
+    //   this.priviousPressure = pressure;
+    //   this.points.push({ x, y, command: "L" });
+    //   if (this.points.length > 3) {
+    //     const lastTwoPoints = this.points.slice(-2);
+    //     const controlPoint = lastTwoPoints[0];
+    //     const endPoint = {
+    //       x: (lastTwoPoints[0].x + lastTwoPoints[1].x) / 2,
+    //       y: (lastTwoPoints[0].y + lastTwoPoints[1].y) / 2
+    //     };
+    //     this.drawPath(
+    //       this.beginPoint,
+    //       controlPoint,
+    //       endPoint,
+    //       (this.priviousPressure + pressure) / 2
+    //     );
+    //     this.beginPoint = endPoint;
+    //   } else {
+    //     this.priviousPressure = pressure;
+    //   }
+    //   this.beginPoint = null;
+    //   this.canDraw = false;
+    //   this.points = [];
+    // },
+    // onPointdown(e) {
+    //   this.canDraw = true;
+    //   const { x, y, pressure } = this.getPos(e);
+    //   this.priviousPressure = pressure;
+    //   this.points.push({ x, y, command: "M" });
+    //   this.beginPoint = { x, y };
+    // },
+    // onPointmove(e) {
+    //   if (!this.canDraw) return;
+    //   const { x, y, pressure } = this.getPos(e);
+    //   this.priviousPressure = pressure;
+    //   this.points.push({ x, y, command: "L" });
+    //   if (this.points.length > 3) {
+    //     const lastTwoPoints = this.points.slice(-2);
+    //     // const controlPoint = lastTwoPoints[0];
+    //     const endPoint = {
+    //       x: (lastTwoPoints[0].x + lastTwoPoints[1].x) / 2,
+    //       y: (lastTwoPoints[0].y + lastTwoPoints[1].y) / 2
+    //     };
+    //     // this.drawPath(this.beginPoint, controlPoint, endPoint, pressure);
+    //     this.beginPoint = endPoint;
+    //   }
+    // },
     pathToCurve(path, controlPointsNum = 2) {
       // M 开始 L 结束
       let support = ["M", "L"];
@@ -142,85 +192,35 @@ export default {
       return str;
     },
 
-    getPos(e) {
-      console.log("e", e);
-      // let pointer = {
-      return {
-        x: e.layerX,
-        y: e.layerY,
-        // x: e.offsetX,
-        // y: e.offsetY,
-        pressure: e.pressure
-      };
-
-      // let drawCanvasEl = document.querySelector("#image_canvas_wrap");
-      // const bounds = drawCanvasEl.getBoundingClientRect();
-      // let boundsWidth = bounds.width || 0;
-      // let boundsHeight = bounds.height || 0;
-      // let cssScale;
-
-      // if (!boundsWidth || !boundsHeight) {
-      //   if ("top" in bounds && "bottom" in bounds) {
-      //     boundsHeight = Math.abs(bounds.top - bounds.bottom);
-      //   }
-      //   if ("right" in bounds && "left" in bounds) {
-      //     boundsWidth = Math.abs(bounds.right - bounds.left);
-      //   }
-      // }
-
-      // if (boundsWidth === 0 || boundsHeight === 0) {
-      //   // If bounds are not available (i.e. not visible), do not apply scale.
-      //   cssScale = { width: 1, height: 1 };
-      // } else {
-      //   cssScale = {
-      //     width: drawCanvasEl.width / boundsWidth,
-      //     height: drawCanvasEl.height / boundsHeight
-      //   };
-      // }
-
-      // return {
-      //   x: (pointer.x - bounds.left) * 1,
-      //   y: (pointer.y - bounds.top) * 1,
-      //   pressure: e.pressure
-      // };
-    },
-
-    drawPath(beginPoint, controlPoint, endPoint, width) {
-      let c = document.createElement("canvas");
-      this.ctx = c.getContext("2d");
-      this.ctx.beginPath();
-      this.ctx.moveTo(beginPoint.x, beginPoint.y);
-      this.ctx.quadraticCurveTo(
-        controlPoint.x,
-        controlPoint.y,
-        endPoint.x,
-        endPoint.y
-      );
-
-      this.ctx.lineWidth = width;
-      this.ctx.stroke();
-      this.ctx.closePath();
-      let p = this.pathToCurve(this.points);
-      console.log("p", p);
-      var path = new fabric.Path(p, {
+    drawPath(str) {
+      let path = new fabric.Path(str, {
         fill: null,
         stroke: "green",
         strokeWidth: 4,
         strokeLineCap: "round",
         strokeLineJoin: "round",
-        originX: "center",
-        originY: "top",
-        // left: 100,
-        // top: 100,
-        // evented: true,
+        // originX: "center",
+        // originY: "top",
+        pathOffset: null,
+        evented: true,
         hasControls: true,
         hasBorders: true,
         selectable: true,
         isDrawingMode: false,
         className: "custom_path"
-        // objectCaching: false
-        // strokeStyle
       });
+      this.canvas.add(path);
+
+      // path.setCoords();
+
+      // path.calcCoords();
+      // var r = path.getBoundingRect();
+      // path.set({ left: -r.left, top: -r.top });
+      // path.calcCoords();
+
+      // console.log("r", r);
+      // console.log("Path", path);
+      // path._setPositionDimensions();
 
       // var path = new fabric.Path("M 65 0 Q 100, 100, 200, 0");
       // var path = new fabric.Path("M 65 0 Q 100, 100, 200, 0", {
@@ -230,14 +230,13 @@ export default {
       // });
       // path.set({ left: 10, top: 0 });
       // canvas.add(path);
-      path.padding = 0;
-      path.setCoords();
+      // path.padding = 0;
+      // path.setCoords();
 
       path.set("className", "custom_path");
 
       // path.on("mousedown", this.onMouseDownLine);s
       // path.on("mousemove", this.onMouseMoveLine);
-      this.canvas.add(path);
       // this.canvas.setActiveObject(path);
       this.canvas.requestRenderAll();
     },
@@ -295,7 +294,7 @@ export default {
         container.addEventListener("pointerdown", this.onPointdown);
         container.addEventListener("pointermove", this.onPointmove);
         container.addEventListener("pointerup", this.onPointup);
-        container.addEventListener("pointerleave", this.onPointleave);
+        // container.addEventListener("pointerleave", this.onPointleave);
 
         // console.log("container", container);
         // this.freeDraw();
