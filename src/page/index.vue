@@ -160,7 +160,7 @@ const methods = {
       if (!exportCanvas) {
         exportCanvas = document.createElement("canvas");
         exportCanvas.id = "export_canvas";
-        // exportCanvas.style.border = "1px solid red";
+        exportCanvas.style.border = "1px solid pink";
       } else {
         exportCanvas.getObjects().forEach((child) => {
           exportCanvas.remove(child);
@@ -190,9 +190,12 @@ const methods = {
         sel.left = 0;
         sel.top = 0;
 
+        // exportCanvas.centerObject(sel);
+        // document.appendChild(exportCanvas);
+
         let data = exportCanvas.toDataURL({
           // origin.height / scale.height,
-          // multiplier: 3, // 恢复比例导出
+          // multiplier: 10, // 恢复比例导出
           format: "jpeg",
           quality: 0.8 // 降质量
         });
@@ -204,6 +207,10 @@ const methods = {
     });
   },
   exportImage(type, index = this.currIndex) {
+    // let center = this.canvas.getCenter();
+    // let zoomPoint = new fabric.Point(center.left, center.top);
+    // this.canvas.zoomToPoint(zoomPoint, 1);
+    // this.canvas.renderAll();
     // 导出单张(默认当前)或所有
     if (!this.currItem || !type) return;
     this.saveCurrItemState(); // 导出时候默认保存当前item一次，避免状态遗漏
@@ -362,7 +369,8 @@ const methods = {
     // console.log("dealAdd", target);
     if (target.get("type") === "path") {
       if (target.className !== "custom_path") {
-        this.canvas.remove(e.target);
+        console.log("dealAdd", target, target.left);
+        // this.canvas.remove(e.target);
       }
     }
     // console.log("----dealAdd----", e);
@@ -554,7 +562,7 @@ export default {
         height: containerDOM.clientHeight
       };
       this.toNext();
-      this.addrect();
+      // this.addrect();
     });
   },
   methods,
@@ -566,8 +574,8 @@ export default {
   },
   data() {
     const defaultConfig = {
-      colorList: ["red", "green", "blue", "pink"],
-      color: "red",
+      colorList: ["#b92b27", "#ee9ca7", "#1565C0", "#a8ff78"],
+      color: "#b92b27",
       pencilSizeList: [1, 2, 3, 4],
       pencilSize: 1,
       rotateLeft: true,

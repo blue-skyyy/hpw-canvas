@@ -22,8 +22,8 @@
     </select>
     <div id="container"></div>
     <script>
-      var width = window.innerWidth;
-      var height = window.innerHeight - 25;
+      var width = 800;
+      var height = 600;
 
       // first we need Konva core things: stage and layer
       var stage = new Konva.Stage({
@@ -31,28 +31,26 @@
         width: width,
         height: height
       });
-      let imgLayer = new Konva.Layer();
-      stage.add(imgLayer);
+      // let imgLayer = new Konva.Layer();
+      // stage.add(imgLayer);
 
       var layer = new Konva.Layer();
       stage.add(layer);
 
-      // stage.container().style.background = "./test.png";
-      var imageObj = new Image();
-      imageObj.onload = function() {
-        var yoda = new Konva.Image({
-          x: 50,
-          y: 50,
-          image: imageObj,
-          width: 106,
-          height: 118
-        });
+      // var imageObj = new Image();
+      // imageObj.onload = function() {
+      //   var yoda = new Konva.Image({
+      //     x: 0,
+      //     y: 0,
+      //     image: imageObj,
+      //     width: 800,
+      //     height: 600
+      //   });
 
-        // add the shape to the layer
-        imgLayer.add(yoda);
-        imgLayer.batchDraw();
-      };
-      imageObj.src = "./test.png";
+      //   imgLayer.add(yoda);
+      //   imgLayer.batchDraw();
+      // };
+      // imageObj.src = "./test.png";
 
       var isPaint = false;
       var mode = "brush";

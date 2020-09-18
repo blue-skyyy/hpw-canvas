@@ -19,13 +19,13 @@
 <script>
 
 var canvas = new fabric.Canvas('c');
-canvas.freeDrawingBrush = new fabric.CircleBrush(canvas)
+canvas.freeDrawingBrush = new fabric.PencilBrush(canvas)
 canvas.isDrawingMode = 'true';
 var pathId = 0;
 
 canvas.freeDrawingBrush.onMouseDown = (function(onMouseDown) {
   return function(pointer) {
-    console.log('down');
+    // console.log('down');
     this.createdOn = Date.now();
     onMouseDown.call(this, pointer);
   }

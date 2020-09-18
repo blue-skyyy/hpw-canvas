@@ -42,6 +42,7 @@ export default {
       // 以中心点为基点做缩放
       let zoom = this.canvas.getZoom();
       let center = this.canvas.getCenter();
+      console.log(center.left, center.left * 0.9);
       let zoomPoint = new fabric.Point(center.left, center.top);
       if (type == "out") {
         // 放大
