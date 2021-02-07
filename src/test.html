@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body></body>
+</html>
+
+<script>
+  let arr1 = [
+    { name: "name1", id: 1 },
+    { name: "name2", id: 2 },
+    { name: "name3", id: 3 },
+    { name: "name3", id: 4 },
+    { name: "name3", id: 5 }
+  ];
+
+  let arr1Id = [1, 2, 3, 4, 5];
+
+  let arr2 = [
+    { name: "name1", id: 1 },
+    { name: "name4", id: 4 },
+    { name: "name5", id: 5 }
+  ];
+
+  let arr2Id = [1, 4, 5];
+
+  let arr3 = arr1.concat(arr2);
+
+  let result = arr3.filter(function(v) {
+    return arr1Id.indexOf(v.id) === -1 || arr2Id.indexOf(v.id) === -1;
+  });
+
+  console.log(result);
+</script>
